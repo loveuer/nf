@@ -3,8 +3,11 @@ package nf
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
+	"mime/multipart"
+	"net"
 	"net/http"
 	"strings"
 )
@@ -91,6 +94,11 @@ func (c *Ctx) Form(key string) string {
 	return c.Request.FormValue(key)
 }
 
+func (c *Ctx) FormFile(key string) (*multipart.FileHeader, error) {
+	_, fh, err := c.Request.FormFile(key)
+	return fh, err
+}
+
 func (c *Ctx) Query(key string) string {
 	return c.Request.URL.Query().Get(key)
 }
@@ -102,6 +110,14 @@ func (c *Ctx) Get(key string, defaultValue ...string) string {
 	}
 
 	return value
+}
+
+func (c *Ctx) IP() string {
+	ip, _, err := net.SplitHostPort(strings.TrimSpace(c.Request.RemoteAddr))
+	if err != nil {
+		return ""
+	}
+	return ip
 }
 
 func (c *Ctx) BodyParser(out interface{}) error {
@@ -152,5 +168,61 @@ func (c *Ctx) BodyParser(out interface{}) error {
 }
 
 func (c *Ctx) QueryParser(out interface{}) error {
+	//v := reflect.ValueOf(out)
+	//
+	//if v.Kind() == reflect.Ptr && v.Elem().Kind() != reflect.Map {
+	//}
+
 	return parseToStruct("query", out, c.Request.URL.Query())
+}
+
+/* ===============================================================
+|| Handle Ctx Response Part
+=============================================================== */
+
+func (c *Ctx) Status(code int) *Ctx {
+	c.StatusCode = code
+	c.Writer.WriteHeader(code)
+	return c
+}
+
+func (c *Ctx) Set(key string, value string) {
+	c.Writer.Header().Set(key, value)
+}
+
+func (c *Ctx) SetHeader(key string, value string) {
+	c.Writer.Header().Set(key, value)
+}
+
+func (c *Ctx) SendString(data string) error {
+	c.SetHeader("Content-Type", "text/plain")
+	_, err := c.Write([]byte(data))
+	return err
+}
+
+func (c *Ctx) Writef(format string, values ...interface{}) (int, error) {
+	c.SetHeader("Content-Type", "text/plain")
+	return c.Writer.Write([]byte(fmt.Sprintf(format, values...)))
+}
+
+func (c *Ctx) JSON(data interface{}) error {
+	c.SetHeader("Content-Type", "application/json")
+
+	encoder := json.NewEncoder(c.Writer)
+
+	if err := encoder.Encode(data); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Ctx) Write(data []byte) (int, error) {
+	return c.Writer.Write(data)
+}
+
+func (c *Ctx) HTML(html string) error {
+	c.SetHeader("Content-Type", "text/html")
+	_, err := c.Writer.Write([]byte(html))
+	return err
 }
