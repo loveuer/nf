@@ -1,0 +1,9 @@
+### body_limit
+POST http://127.0.0.1/data
+Content-Type: application/json
+
+{
+  "name": "zyp",
+  "age": 19,
+  "likes": ["2233"]
+}
