@@ -7,27 +7,22 @@ import (
 	"time"
 )
 
+var (
+	app  = nf.New()
+	quit = make(chan bool)
+)
+
 func main() {
-	app := nf.New()
-	quit := make(chan bool)
 
 	app.Get("/name", handleGet)
 
 	go func() {
-		err := app.Run(":7383")
+		err := app.Run(":80")
 		log.Print("run with err=", err)
-	}()
-
-	go func() {
-		time.Sleep(5 * time.Second)
-		err := app.Shutdown(context.TODO())
-		log.Print("quit with err=", err)
 		quit <- true
 	}()
 
 	<-quit
-
-	log.Print("quited")
 }
 
 func handleGet(c *nf.Ctx) error {
@@ -43,6 +38,14 @@ func handleGet(c *nf.Ctx) error {
 
 	if err = c.QueryParser(&req); err != nil {
 		return nf.NewNFError(400, err.Error())
+	}
+
+	if req.Name == "quit" {
+
+		go func() {
+			time.Sleep(2 * time.Second)
+			log.Print("app quit = ", app.Shutdown(context.TODO()))
+		}()
 	}
 
 	return c.JSON(nf.Map{"req_map": req})
