@@ -48,7 +48,12 @@ func (a *App) run(ln net.Listener) error {
 		fmt.Println(banner + "nf serve at: " + ln.Addr().String() + "\n")
 	}
 
-	return a.server.Serve(ln)
+	err := a.server.Serve(ln)
+	if !errors.Is(err, http.ErrServerClosed) || a.config.ErrServeClose {
+		return err
+	}
+
+	return nil
 }
 
 func (a *App) Run(address string) error {

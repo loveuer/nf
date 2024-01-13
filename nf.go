@@ -8,10 +8,14 @@ type Map map[string]interface{}
 
 type Config struct {
 	// Default: 4 * 1024 * 1024
-	BodyLimit      int64 `json:"-"`
-	DisableBanner  bool  `json:"-"`
-	DisableLogger  bool  `json:"-"`
-	DisableRecover bool  `json:"-"`
+	BodyLimit int64 `json:"-"`
+
+	// if report http.ErrServerClosed as run err
+	ErrServeClose bool `json:"-"`
+
+	DisableBanner  bool `json:"-"`
+	DisableLogger  bool `json:"-"`
+	DisableRecover bool `json:"-"`
 }
 
 var (

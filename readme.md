@@ -50,7 +50,7 @@ func handlePost(c *nf.Ctx) error {
     var (
         err error
         req = Req{}
-		reqMap = make(map[string]any)
+        reqMap = make(map[string]any)
     )
 	
     if err = c.BodyParser(&req); err != nil {
