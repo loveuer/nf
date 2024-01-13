@@ -1,8 +1,11 @@
 package nf
 
 import (
+	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 )
@@ -12,6 +15,7 @@ type App struct {
 	config *Config
 	router *router
 	groups []*RouterGroup
+	server *http.Server
 }
 
 func (a *App) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
@@ -36,9 +40,42 @@ func (a *App) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func (a *App) Run(address string) error {
+func (a *App) run(ln net.Listener) error {
 	if !a.config.DisableBanner {
-		fmt.Println(banner + "nf serve at: " + address + "\n")
+		fmt.Println(banner + "nf serve at: " + a.server.Addr + "\n")
 	}
-	return http.ListenAndServe(address, a)
+
+	return a.server.Serve(ln)
+}
+
+func (a *App) Run(address string) error {
+	ln, err := net.Listen("tcp", address)
+	if err != nil {
+		return err
+	}
+
+	a.server = &http.Server{}
+
+	return a.run(ln)
+}
+
+func (a *App) RunTLS(address string, tlsConfig *tls.Config) error {
+	ln, err := tls.Listen("tcp", address, tlsConfig)
+	if err != nil {
+		return err
+	}
+
+	a.server = &http.Server{}
+
+	return a.run(ln)
+}
+
+func (a *App) RunListener(ln net.Listener) error {
+	a.server = &http.Server{}
+
+	return a.run(ln)
+}
+
+func (a *App) Shutdown(ctx context.Context) error {
+	return a.server.Shutdown(ctx)
 }
