@@ -41,8 +41,11 @@ func (a *App) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 }
 
 func (a *App) run(ln net.Listener) error {
+	srv := &http.Server{Handler: a}
+	a.server = srv
+
 	if !a.config.DisableBanner {
-		fmt.Println(banner + "nf serve at: " + a.server.Addr + "\n")
+		fmt.Println(banner + "nf serve at: " + ln.Addr().String() + "\n")
 	}
 
 	return a.server.Serve(ln)
@@ -54,8 +57,6 @@ func (a *App) Run(address string) error {
 		return err
 	}
 
-	a.server = &http.Server{}
-
 	return a.run(ln)
 }
 
@@ -65,13 +66,11 @@ func (a *App) RunTLS(address string, tlsConfig *tls.Config) error {
 		return err
 	}
 
-	a.server = &http.Server{}
-
 	return a.run(ln)
 }
 
 func (a *App) RunListener(ln net.Listener) error {
-	a.server = &http.Server{}
+	a.server = &http.Server{Addr: ln.Addr().String()}
 
 	return a.run(ln)
 }

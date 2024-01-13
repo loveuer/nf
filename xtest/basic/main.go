@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/loveuer/nf"
 	"log"
+	"net"
 )
 
 func main() {
@@ -13,5 +14,6 @@ func main() {
 		return c.JSON(nf.Map{"status": 200, "data": "hello, " + name})
 	})
 
-	log.Fatal(app.Run("0.0.0.0:80"))
+	ln, _ := net.Listen("tcp", ":80")
+	log.Fatal(app.RunListener(ln))
 }
