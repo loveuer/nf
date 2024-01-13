@@ -13,9 +13,10 @@ type Config struct {
 	// if report http.ErrServerClosed as run err
 	ErrServeClose bool `json:"-"`
 
-	DisableBanner  bool `json:"-"`
-	DisableLogger  bool `json:"-"`
-	DisableRecover bool `json:"-"`
+	DisableBanner       bool `json:"-"`
+	DisableLogger       bool `json:"-"`
+	DisableRecover      bool `json:"-"`
+	DisableHttpErrorLog bool `json:"-"`
 }
 
 var (

@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"io"
+	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -42,6 +44,11 @@ func (a *App) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 
 func (a *App) run(ln net.Listener) error {
 	srv := &http.Server{Handler: a}
+
+	if a.config.DisableHttpErrorLog {
+		srv.ErrorLog = log.New(io.Discard, "", 0)
+	}
+
 	a.server = srv
 
 	if !a.config.DisableBanner {
