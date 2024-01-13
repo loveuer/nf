@@ -26,7 +26,7 @@ type Ctx struct {
 	params   map[string]string
 	index    int
 	handlers []HandlerFunc
-	locals   map[string]any
+	locals   map[string]interface{}
 }
 
 func newContext(app *App, writer http.ResponseWriter, request *http.Request) *Ctx {
@@ -38,12 +38,12 @@ func newContext(app *App, writer http.ResponseWriter, request *http.Request) *Ct
 
 		app:      app,
 		index:    -1,
-		locals:   map[string]any{},
+		locals:   map[string]interface{}{},
 		handlers: make([]HandlerFunc, 0),
 	}
 }
 
-func (c *Ctx) Locals(key string, value ...any) any {
+func (c *Ctx) Locals(key string, value ...interface{}) interface{} {
 	data := c.locals[key]
 	if len(value) > 0 {
 		c.locals[key] = value[0]

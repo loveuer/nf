@@ -18,7 +18,7 @@ func main() {
 		var (
 			err error
 			req = new(Req)
-			rm  = make(map[string]any)
+			rm  = make(map[string]interface{})
 		)
 
 		//if err = c.QueryParser(req); err != nil {
