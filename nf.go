@@ -42,6 +42,10 @@ func New(config ...Config) *App {
 	app.RouterGroup = &RouterGroup{app: app}
 	app.groups = []*RouterGroup{app.RouterGroup}
 
+	if !app.config.DisableLogger {
+		app.Use(NewLogger())
+	}
+
 	if !app.config.DisableRecover {
 		app.Use(NewRecover(true))
 	}

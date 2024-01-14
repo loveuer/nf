@@ -14,7 +14,7 @@ import (
 
 type Ctx struct {
 	// origin objects
-	Writer  http.ResponseWriter
+	writer  http.ResponseWriter
 	Request *http.Request
 	// request info
 	path   string
@@ -31,10 +31,11 @@ type Ctx struct {
 
 func newContext(app *App, writer http.ResponseWriter, request *http.Request) *Ctx {
 	return &Ctx{
-		Writer:  writer,
-		Request: request,
-		path:    request.URL.Path,
-		Method:  request.Method,
+		writer:     writer,
+		Request:    request,
+		path:       request.URL.Path,
+		Method:     request.Method,
+		StatusCode: 200,
 
 		app:      app,
 		index:    -1,
@@ -182,16 +183,16 @@ func (c *Ctx) QueryParser(out interface{}) error {
 
 func (c *Ctx) Status(code int) *Ctx {
 	c.StatusCode = code
-	c.Writer.WriteHeader(code)
+	c.writer.WriteHeader(code)
 	return c
 }
 
 func (c *Ctx) Set(key string, value string) {
-	c.Writer.Header().Set(key, value)
+	c.writer.Header().Set(key, value)
 }
 
 func (c *Ctx) SetHeader(key string, value string) {
-	c.Writer.Header().Set(key, value)
+	c.writer.Header().Set(key, value)
 }
 
 func (c *Ctx) SendString(data string) error {
@@ -202,13 +203,13 @@ func (c *Ctx) SendString(data string) error {
 
 func (c *Ctx) Writef(format string, values ...interface{}) (int, error) {
 	c.SetHeader("Content-Type", "text/plain")
-	return c.Writer.Write([]byte(fmt.Sprintf(format, values...)))
+	return c.writer.Write([]byte(fmt.Sprintf(format, values...)))
 }
 
 func (c *Ctx) JSON(data interface{}) error {
 	c.SetHeader("Content-Type", "application/json")
 
-	encoder := json.NewEncoder(c.Writer)
+	encoder := json.NewEncoder(c.writer)
 
 	if err := encoder.Encode(data); err != nil {
 		return err
@@ -217,12 +218,16 @@ func (c *Ctx) JSON(data interface{}) error {
 	return nil
 }
 
+func (c *Ctx) RawWriter() http.ResponseWriter {
+	return c.writer
+}
+
 func (c *Ctx) Write(data []byte) (int, error) {
-	return c.Writer.Write(data)
+	return c.writer.Write(data)
 }
 
 func (c *Ctx) HTML(html string) error {
 	c.SetHeader("Content-Type", "text/html")
-	_, err := c.Writer.Write([]byte(html))
+	_, err := c.writer.Write([]byte(html))
 	return err
 }
