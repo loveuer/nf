@@ -91,8 +91,7 @@ func (r *router) handle(c *Ctx) error {
 		key := c.Method + "-" + node.pattern
 		c.handlers = append(c.handlers, r.handlers[key]...)
 	} else {
-		_, err := c.Writef("404 NOT FOUND: %s\n", c.path)
-		return err
+		return c.app.config.NotFoundHandler(c)
 	}
 
 	return c.Next()

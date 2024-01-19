@@ -13,11 +13,9 @@ const (
 	MIMETextJavaScript  = "text/javascript"
 	MIMEApplicationXML  = "application/xml"
 	MIMEApplicationJSON = "application/json"
-	// Deprecated: use MIMETextJavaScript instead
-	MIMEApplicationJavaScript = "application/javascript"
-	MIMEApplicationForm       = "application/x-www-form-urlencoded"
-	MIMEOctetStream           = "application/octet-stream"
-	MIMEMultipartForm         = "multipart/form-data"
+	MIMEApplicationForm = "application/x-www-form-urlencoded"
+	MIMEOctetStream     = "application/octet-stream"
+	MIMEMultipartForm   = "multipart/form-data"
 
 	MIMETextXMLCharsetUTF8         = "text/xml; charset=utf-8"
 	MIMETextHTMLCharsetUTF8        = "text/html; charset=utf-8"

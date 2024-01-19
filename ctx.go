@@ -207,7 +207,7 @@ func (c *Ctx) Writef(format string, values ...interface{}) (int, error) {
 }
 
 func (c *Ctx) JSON(data interface{}) error {
-	c.SetHeader("Content-Type", "application/json")
+	c.SetHeader("Content-Type", MIMEApplicationJSON)
 
 	encoder := json.NewEncoder(c.writer)
 
