@@ -2,7 +2,6 @@ package resp
 
 import (
 	"errors"
-	"fmt"
 	"github.com/loveuer/nf"
 )
 
@@ -15,28 +14,28 @@ type Error struct {
 
 func (e Error) Error() string {
 	if e.msg != "" {
-		return fmt.Sprintf("%s: %s", e.msg, e.err.Error())
+		return e.msg
 	}
 
 	switch e.status {
 	case 200:
-		return fmt.Sprintf("%s: %s", MSG200, e.err.Error())
+		return MSG200
 	case 202:
-		return fmt.Sprintf("%s: %s", MSG202, e.err.Error())
+		return MSG202
 	case 400:
-		return fmt.Sprintf("%s: %s", MSG400, e.err.Error())
+		return MSG400
 	case 401:
-		return fmt.Sprintf("%s: %s", MSG401, e.err.Error())
+		return MSG401
 	case 403:
-		return fmt.Sprintf("%s: %s", MSG403, e.err.Error())
+		return MSG403
 	case 404:
-		return fmt.Sprintf("%s: %s", MSG404, e.err.Error())
+		return MSG404
 	case 429:
-		return fmt.Sprintf("%s: %s", MSG429, e.err.Error())
+		return MSG429
 	case 500:
-		return fmt.Sprintf("%s: %s", MSG500, e.err.Error())
+		return MSG500
 	case 501:
-		return fmt.Sprintf("%s: %s", MSG501, e.err.Error())
+		return MSG501
 	}
 
 	return e.err.Error()
