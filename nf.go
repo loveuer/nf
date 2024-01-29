@@ -19,7 +19,8 @@ type Config struct {
 	DisableRecover      bool `json:"-"`
 	DisableHttpErrorLog bool `json:"-"`
 
-	NotFoundHandler HandlerFunc `json:"-"`
+	EnableNotImplementHandler bool        `json:"-"`
+	NotFoundHandler           HandlerFunc `json:"-"`
 }
 
 var (

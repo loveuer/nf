@@ -27,18 +27,6 @@ const (
 	MIMEApplicationJavaScriptCharsetUTF8 = "application/javascript; charset=utf-8"
 )
 
-func verifyHandlers(path string, handlers ...HandlerFunc) {
-	if len(handlers) == 0 {
-		panic(fmt.Sprintf("missing handler in route: %s", path))
-	}
-
-	for _, handler := range handlers {
-		if handler == nil {
-			panic(fmt.Sprintf("nil handler found in route: %s", path))
-		}
-	}
-}
-
 // parseVendorSpecificContentType check if content type is vendor specific and
 // if it is parsable to any known types. If it's not vendor specific then returns
 // the original content type.

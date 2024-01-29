@@ -1,2 +1,6 @@
 ### basic - get
 GET http://127.0.0.1/hello/nf
+
+
+### test resp error
+GET http://127.0.0.1/error
