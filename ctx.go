@@ -62,6 +62,23 @@ func (c *Ctx) Path(overWrite ...string) string {
 	return path
 }
 
+func (c *Ctx) Cookies(key string, defaultValue ...string) string {
+	var (
+		dv = ""
+	)
+
+	if len(defaultValue) > 0 {
+		dv = defaultValue[0]
+	}
+
+	cookie, err := c.Request.Cookie(key)
+	if err != nil || cookie.Value == "" {
+		return dv
+	}
+
+	return cookie.Value
+}
+
 func (c *Ctx) Next() error {
 	c.index++
 	s := len(c.handlers)
