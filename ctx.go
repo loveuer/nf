@@ -81,14 +81,14 @@ func (c *Ctx) Cookies(key string, defaultValue ...string) string {
 
 func (c *Ctx) Next() error {
 	c.index++
-	s := len(c.handlers)
-	for ; c.index < s; c.index++ {
-		if err := c.handlers[c.index](c); err != nil {
-			return err
-		}
+
+	var err error
+
+	if c.index < len(c.handlers) {
+		err = c.handlers[c.index](c)
 	}
 
-	return nil
+	return err
 }
 
 /* ===============================================================
