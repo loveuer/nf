@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"mime/multipart"
 	"net"
 	"net/http"
@@ -144,8 +143,6 @@ func (c *Ctx) BodyParser(out interface{}) error {
 		ctype = strings.ToLower(c.Request.Header.Get("Content-Type"))
 	)
 
-	log.Printf("BodyParser: Content-Type=%s", ctype)
-
 	ctype = parseVendorSpecificContentType(ctype)
 
 	ctypeEnd := strings.IndexByte(ctype, ';')
@@ -156,9 +153,9 @@ func (c *Ctx) BodyParser(out interface{}) error {
 	if strings.HasSuffix(ctype, "json") {
 		bs, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			log.Printf("BodyParser: read all err=%v", err)
 			return err
 		}
+		_ = c.Request.Body.Close()
 
 		c.Request.Body = io.NopCloser(bytes.NewReader(bs))
 

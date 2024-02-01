@@ -4,3 +4,11 @@ GET http://127.0.0.1/hello/nf
 
 ### test resp error
 GET http://127.0.0.1/error
+
+### test basic post
+POST http://127.0.0.1/data
+Content-Type: application/json
+
+{
+  "name": "nice"
+}
