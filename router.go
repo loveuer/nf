@@ -48,7 +48,7 @@ func (r *router) getRoute(method string, path string) (*_node, map[string]string
 	root, ok := r.roots[method]
 
 	if !ok {
-		return nil, nil
+		return &_node{}, nil
 	}
 
 	n := root.search(searchParts, 0)
