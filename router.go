@@ -64,10 +64,11 @@ func (r *router) getRoute(method string, path string) (*_node, map[string]string
 				break
 			}
 		}
+
 		return n, params
 	}
 
-	return nil, nil
+	return root, nil
 }
 
 func (r *router) getRoutes(method string) []*_node {
@@ -90,6 +91,7 @@ func (r *router) handle(c *Ctx) error {
 		c.params = params
 		key := c.Method + "-" + node.pattern
 		c.handlers = append(c.handlers, r.handlers[key]...)
+		//c.handlers = append(r.handlers[key], c.handlers...)
 	} else {
 		return c.app.config.NotFoundHandler(c)
 	}

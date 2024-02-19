@@ -53,7 +53,7 @@ func New(config ...Config) *App {
 		app.config = defaultConfig
 	}
 
-	app.RouterGroup = &RouterGroup{app: app, prefix: "/"}
+	app.RouterGroup = &RouterGroup{app: app, prefix: ""}
 	app.groups = []*RouterGroup{app.RouterGroup}
 
 	if !app.config.DisableLogger {
