@@ -139,6 +139,10 @@ func (a *App) addRoute(method, path string, handlers ...HandlerFunc) {
 }
 
 func (a *App) handleHTTPRequest(c *Ctx) {
+	var (
+		err error
+	)
+
 	httpMethod := c.Request.Method
 	rPath := c.Request.URL.Path
 	unescape := false
@@ -166,8 +170,11 @@ func (a *App) handleHTTPRequest(c *Ctx) {
 		if value.handlers != nil {
 			c.handlers = value.handlers
 			c.fullPath = value.fullPath
-			// todo
-			c.Next()
+
+			if err = c.Next(); err != nil {
+				serveError(c, errorHandler)
+			}
+
 			c.writermem.WriteHeaderNow()
 			return
 		}
@@ -210,8 +217,8 @@ func (a *App) handleHTTPRequest(c *Ctx) {
 	serveError(c, a.config.NotFoundHandler)
 }
 
-func errorHandler(c *Ctx) {
-	_ = c.Status(500).SendString(_500)
+func errorHandler(c *Ctx) error {
+	return c.Status(500).SendString(_500)
 }
 
 func serveError(c *Ctx, handler HandlerFunc) {

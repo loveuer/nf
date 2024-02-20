@@ -110,17 +110,20 @@ func (c *Ctx) Cookies(key string, defaultValue ...string) string {
 func (c *Ctx) Next() error {
 	c.index++
 
-	var err error
+	var (
+		err     error
+		handler = c.handlers[c.index]
+	)
 
-	for c.index < len(c.handlers) {
-		if c.handlers[c.index] != nil {
-			if err = c.handlers[c.index](c); err != nil {
-				return err
-			}
+	//for c.index < len(c.handlers) {
+	if handler != nil {
+		if err = handler(c); err != nil {
+			return err
 		}
-
-		c.index++
 	}
+
+	c.index++
+	//}
 
 	return nil
 }
