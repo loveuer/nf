@@ -12,35 +12,54 @@ import (
 )
 
 type Ctx struct {
+	writermem responseWriter
 	// origin objects
 	writer  http.ResponseWriter
 	Request *http.Request
 	// request info
 	path   string
-	Method string
+	method string
 	// response info
 	StatusCode int
 
-	app      *App
-	params   map[string]string
-	index    int
-	handlers []HandlerFunc
-	locals   map[string]interface{}
+	app          *App
+	params       *Params
+	index        int
+	handlers     []HandlerFunc
+	locals       map[string]interface{}
+	skippedNodes *[]skippedNode
+	fullPath     string
+	Params       Params
 }
 
 func newContext(app *App, writer http.ResponseWriter, request *http.Request) *Ctx {
-	return &Ctx{
+
+	skippedNodes := make([]skippedNode, 0, app.maxSections)
+	v := make(Params, 0, app.maxParams)
+
+	ctx := &Ctx{
 		writer:     writer,
+		writermem:  responseWriter{},
 		Request:    request,
 		path:       request.URL.Path,
-		Method:     request.Method,
+		method:     request.Method,
 		StatusCode: 200,
 
-		app:      app,
-		index:    -1,
-		locals:   map[string]interface{}{},
-		handlers: make([]HandlerFunc, 0),
+		app:          app,
+		index:        -1,
+		locals:       map[string]interface{}{},
+		handlers:     make([]HandlerFunc, 0),
+		skippedNodes: &skippedNodes,
+		params:       &v,
 	}
+
+	ctx.writermem = responseWriter{
+		ResponseWriter: ctx.writer,
+		size:           -1,
+		status:         0,
+	}
+
+	return ctx
 }
 
 func (c *Ctx) Locals(key string, value ...interface{}) interface{} {
@@ -50,6 +69,16 @@ func (c *Ctx) Locals(key string, value ...interface{}) interface{} {
 	}
 
 	return data
+}
+
+func (c *Ctx) Method(overWrite ...string) string {
+	method := c.Request.Method
+
+	if len(overWrite) > 0 && overWrite[0] != "" {
+		c.Request.Method = overWrite[0]
+	}
+
+	return method
 }
 
 func (c *Ctx) Path(overWrite ...string) string {
@@ -83,11 +112,17 @@ func (c *Ctx) Next() error {
 
 	var err error
 
-	if c.index < len(c.handlers) {
-		err = c.handlers[c.index](c)
+	for c.index < len(c.handlers) {
+		if c.handlers[c.index] != nil {
+			if err = c.handlers[c.index](c); err != nil {
+				return err
+			}
+		}
+
+		c.index++
 	}
 
-	return err
+	return nil
 }
 
 /* ===============================================================
@@ -104,7 +139,7 @@ func (c *Ctx) verify() error {
 }
 
 func (c *Ctx) Param(key string) string {
-	return c.params[key]
+	return c.Params.ByName(key)
 }
 
 func (c *Ctx) Form(key string) string {
@@ -196,17 +231,17 @@ func (c *Ctx) QueryParser(out interface{}) error {
 =============================================================== */
 
 func (c *Ctx) Status(code int) *Ctx {
-	c.StatusCode = code
-	c.writer.WriteHeader(code)
+	c.writermem.WriteHeader(code)
+	c.StatusCode = c.writermem.status
 	return c
 }
 
 func (c *Ctx) Set(key string, value string) {
-	c.writer.Header().Set(key, value)
+	c.writermem.Header().Set(key, value)
 }
 
 func (c *Ctx) SetHeader(key string, value string) {
-	c.writer.Header().Set(key, value)
+	c.writermem.Header().Set(key, value)
 }
 
 func (c *Ctx) SendString(data string) error {
@@ -223,7 +258,7 @@ func (c *Ctx) Writef(format string, values ...interface{}) (int, error) {
 func (c *Ctx) JSON(data interface{}) error {
 	c.SetHeader("Content-Type", MIMEApplicationJSON)
 
-	encoder := json.NewEncoder(c.writer)
+	encoder := json.NewEncoder(&c.writermem)
 
 	if err := encoder.Encode(data); err != nil {
 		return err
@@ -237,7 +272,7 @@ func (c *Ctx) RawWriter() http.ResponseWriter {
 }
 
 func (c *Ctx) Write(data []byte) (int, error) {
-	return c.writer.Write(data)
+	return c.writermem.Write(data)
 }
 
 func (c *Ctx) HTML(html string) error {

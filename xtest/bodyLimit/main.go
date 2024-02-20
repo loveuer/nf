@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	app := nf.New(nf.Config{BodyLimit: -1})
+	app := nf.New(nf.Config{BodyLimit: 30})
 
 	app.Post("/data", func(c *nf.Ctx) error {
 		type Req struct {

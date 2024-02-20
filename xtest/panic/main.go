@@ -7,7 +7,7 @@ import (
 
 func main() {
 	app := nf.New(nf.Config{
-		DisableRecover: true,
+		DisableRecover: false,
 	})
 
 	app.Get("/hello/:name", func(c *nf.Ctx) error {

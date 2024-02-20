@@ -17,6 +17,9 @@ func NewRecover(enableStackTrace bool) HandlerFunc {
 				} else {
 					os.Stderr.WriteString(fmt.Sprintf("recovered from panic: %v\n", r))
 				}
+
+				//serveError(c, 500, []byte(fmt.Sprint(r)))
+				_ = c.Status(500).SendString(fmt.Sprint(r))
 			}
 		}()
 
@@ -44,10 +47,10 @@ func NewLogger() HandlerFunc {
 
 		if num > 1000 {
 			num = num / 1000
-			unit = " s"
+			unit = "s"
 		}
 
-		return fmt.Sprintf("%v %s", num, unit)
+		return fmt.Sprintf("%3d %2s", num, unit)
 	}
 
 	return func(c *Ctx) error {
