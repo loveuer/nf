@@ -110,12 +110,15 @@ func (c *Ctx) Cookies(key string, defaultValue ...string) string {
 func (c *Ctx) Next() error {
 	c.index++
 
+	if c.index >= len(c.handlers) {
+		return nil
+	}
+
 	var (
 		err     error
 		handler = c.handlers[c.index]
 	)
 
-	//for c.index < len(c.handlers) {
 	if handler != nil {
 		if err = handler(c); err != nil {
 			return err
@@ -123,7 +126,6 @@ func (c *Ctx) Next() error {
 	}
 
 	c.index++
-	//}
 
 	return nil
 }
@@ -146,6 +148,11 @@ func (c *Ctx) Param(key string) string {
 }
 
 func (c *Ctx) Form(key string) string {
+	return c.Request.FormValue(key)
+}
+
+// FormValue fiber ctx function
+func (c *Ctx) FormValue(key string) string {
 	return c.Request.FormValue(key)
 }
 
