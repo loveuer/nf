@@ -161,6 +161,14 @@ func (c *Ctx) FormFile(key string) (*multipart.FileHeader, error) {
 	return fh, err
 }
 
+func (c *Ctx) MultipartForm() (*multipart.Form, error) {
+	if err := c.Request.ParseMultipartForm(c.app.config.BodyLimit); err != nil {
+		return nil, err
+	}
+
+	return c.Request.MultipartForm, nil
+}
+
 func (c *Ctx) Query(key string) string {
 	return c.Request.URL.Query().Get(key)
 }
