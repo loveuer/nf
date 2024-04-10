@@ -6,7 +6,11 @@ import (
 )
 
 func main() {
-	app := nf.New(nf.Config{EnableNotImplementHandler: true})
+	app := nf.New(nf.Config{})
+
+	app.Get("/ok", func(c *nf.Ctx) error {
+		return c.SendStatus(200)
+	})
 
 	api := app.Group("/api")
 	api.Get("/1", func(c *nf.Ctx) error {

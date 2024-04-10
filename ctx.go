@@ -262,6 +262,11 @@ func (c *Ctx) SetHeader(key string, value string) {
 	c.writermem.Header().Set(key, value)
 }
 
+func (c *Ctx) SendStatus(code int) error {
+	c.writermem.WriteHeader(code)
+	return nil
+}
+
 func (c *Ctx) SendString(data string) error {
 	c.SetHeader("Content-Type", "text/plain")
 	_, err := c.Write([]byte(data))
