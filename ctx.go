@@ -29,7 +29,7 @@ type Ctx struct {
 	locals       map[string]interface{}
 	skippedNodes *[]skippedNode
 	fullPath     string
-	Params       Params
+	//Params       Params
 }
 
 func newContext(app *App, writer http.ResponseWriter, request *http.Request) *Ctx {
@@ -144,7 +144,12 @@ func (c *Ctx) verify() error {
 }
 
 func (c *Ctx) Param(key string) string {
-	return c.Params.ByName(key)
+	return c.params.ByName(key)
+}
+
+func (c *Ctx) SetParam(key, value string) {
+	params := append(*c.params, Param{Key: key, Value: value})
+	c.params = &params
 }
 
 func (c *Ctx) Form(key string) string {

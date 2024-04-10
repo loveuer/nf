@@ -13,8 +13,15 @@ func main() {
 	})
 
 	api := app.Group("/api")
-	api.Get("/1", func(c *nf.Ctx) error {
-		return c.SendString("nice")
+	api.Use(func(c *nf.Ctx) error {
+		c.SetParam("age", "18")
+		return c.Next()
+	})
+
+	api.Get("/:name", func(c *nf.Ctx) error {
+		name := c.Param("name")
+		age := c.Param("age")
+		return c.SendString(name + "@" + age)
 	})
 
 	log.Fatal(app.Run(":80"))

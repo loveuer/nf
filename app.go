@@ -165,8 +165,9 @@ func (a *App) handleHTTPRequest(c *Ctx) {
 		// Find route in tree
 		value := root.getValue(rPath, c.params, c.skippedNodes, unescape)
 		if value.params != nil {
-			c.Params = *value.params
+			c.params = value.params
 		}
+
 		if value.handlers != nil {
 			c.handlers = value.handlers
 			c.fullPath = value.fullPath
