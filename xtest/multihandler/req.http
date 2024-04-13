@@ -1,5 +1,0 @@
-### test multi handlers no next
-GET http://127.0.0.1:3333/nice?to=you
-
-### test multi handlers do next
-GET http://127.0.0.1:3333/nice?to=nf

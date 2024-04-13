@@ -9,17 +9,16 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 )
 
 type Ctx struct {
-	writermem responseWriter
-	// origin objects
-	writer  http.ResponseWriter
-	Request *http.Request
-	// request info
-	path   string
-	method string
-	// response info
+	lock       sync.Mutex
+	writermem  responseWriter
+	writer     http.ResponseWriter
+	Request    *http.Request
+	path       string
+	method     string
 	StatusCode int
 
 	app          *App
@@ -29,7 +28,6 @@ type Ctx struct {
 	locals       map[string]interface{}
 	skippedNodes *[]skippedNode
 	fullPath     string
-	//Params       Params
 }
 
 func newContext(app *App, writer http.ResponseWriter, request *http.Request) *Ctx {
@@ -38,8 +36,8 @@ func newContext(app *App, writer http.ResponseWriter, request *http.Request) *Ct
 	v := make(Params, 0, app.maxParams)
 
 	ctx := &Ctx{
+		lock:       sync.Mutex{},
 		writer:     writer,
-		writermem:  responseWriter{},
 		Request:    request,
 		path:       request.URL.Path,
 		method:     request.Method,
@@ -148,6 +146,9 @@ func (c *Ctx) Param(key string) string {
 }
 
 func (c *Ctx) SetParam(key, value string) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
 	params := append(*c.params, Param{Key: key, Value: value})
 	c.params = &params
 }
@@ -241,11 +242,6 @@ func (c *Ctx) BodyParser(out interface{}) error {
 }
 
 func (c *Ctx) QueryParser(out interface{}) error {
-	//v := reflect.ValueOf(out)
-	//
-	//if v.Kind() == reflect.Ptr && v.Elem().Kind() != reflect.Map {
-	//}
-
 	return parseToStruct("query", out, c.Request.URL.Query())
 }
 
@@ -254,8 +250,12 @@ func (c *Ctx) QueryParser(out interface{}) error {
 =============================================================== */
 
 func (c *Ctx) Status(code int) *Ctx {
-	c.writermem.WriteHeader(code)
-	c.StatusCode = c.writermem.status
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	c.StatusCode = code
+	c.writermem.status = code
+
 	return c
 }
 
@@ -268,7 +268,8 @@ func (c *Ctx) SetHeader(key string, value string) {
 }
 
 func (c *Ctx) SendStatus(code int) error {
-	c.writermem.WriteHeader(code)
+	c.Status(code)
+	c.writermem.WriteHeaderNow()
 	return nil
 }
 
@@ -299,12 +300,12 @@ func (c *Ctx) RawWriter() http.ResponseWriter {
 	return c.writer
 }
 
-func (c *Ctx) Write(data []byte) (int, error) {
-	return c.writermem.Write(data)
-}
-
 func (c *Ctx) HTML(html string) error {
 	c.SetHeader("Content-Type", "text/html")
 	_, err := c.writer.Write([]byte(html))
 	return err
+}
+
+func (c *Ctx) Write(data []byte) (int, error) {
+	return c.writermem.Write(data)
 }

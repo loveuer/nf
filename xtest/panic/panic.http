@@ -1,5 +1,0 @@
-### panic test
-GET http://127.0.0.1/hello/nf
-
-### if covered?
-GET http://127.0.0.1/hello/world
