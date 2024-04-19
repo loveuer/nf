@@ -3,7 +3,9 @@ package nf
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/loveuer/nf/internal/sse"
 	"io"
 	"mime/multipart"
 	"net"
@@ -281,7 +283,7 @@ func (c *Ctx) SendString(data string) error {
 
 func (c *Ctx) Writef(format string, values ...interface{}) (int, error) {
 	c.SetHeader("Content-Type", "text/plain")
-	return c.writer.Write([]byte(fmt.Sprintf(format, values...)))
+	return c.Write([]byte(fmt.Sprintf(format, values...)))
 }
 
 func (c *Ctx) JSON(data interface{}) error {
@@ -294,6 +296,23 @@ func (c *Ctx) JSON(data interface{}) error {
 	}
 
 	return nil
+}
+
+func (c *Ctx) SSEvent(event string, data interface{}) error {
+	c.Set("Content-Type", "text/event-stream")
+	c.Set("Cache-Control", "no-cache")
+	c.Set("Transfer-Encoding", "chunked")
+
+	return sse.Encode(c.writer, sse.Event{Event: event, Data: data})
+}
+
+func (c *Ctx) Flush() error {
+	if f, ok := c.writer.(http.Flusher); ok {
+		f.Flush()
+		return nil
+	}
+
+	return errors.New("http.Flusher is not implemented")
 }
 
 func (c *Ctx) RawWriter() http.ResponseWriter {

@@ -19,8 +19,6 @@ var (
 
 	regSafePrefix         = regexp.MustCompile("[^a-zA-Z0-9/-]+")
 	regRemoveRepeatedChar = regexp.MustCompile("/{2,}")
-
-	mimePlain = []string{"text/plain"}
 )
 
 type App struct {
@@ -176,7 +174,6 @@ func (a *App) handleHTTPRequest(c *Ctx) {
 				serveError(c, errorHandler)
 			}
 
-			c.writermem.WriteHeaderNow()
 			return
 		}
 		if httpMethod != http.MethodConnect && rPath != "/" {

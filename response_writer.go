@@ -3,6 +3,7 @@ package nf
 import (
 	"bufio"
 	"io"
+	"log"
 	"net"
 	"net/http"
 )
@@ -60,7 +61,7 @@ func (w *responseWriter) reset(writer http.ResponseWriter) {
 func (w *responseWriter) WriteHeader(code int) {
 	if code > 0 && w.status != code {
 		if w.Written() {
-			// todo: debugPrint("[WARNING] Headers were already written. Wanted to override status code %d with %d", w.status, code)
+			log.Printf("[NF] WARNING: Headers were already written. Wanted to override status code %d with %d", w.status, code)
 			return
 		}
 		w.status = code
@@ -102,7 +103,7 @@ func (w *responseWriter) Size() int {
 }
 
 func (w *responseWriter) Written() bool {
-	return w.size != noWritten
+	return w.size != noWritten || w.status != 0
 }
 
 // Hijack implements the http.Hijacker interface.
