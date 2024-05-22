@@ -255,8 +255,8 @@ func (c *Ctx) Status(code int) *Ctx {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	c.StatusCode = code
-	c.writermem.status = code
+	c.writermem.WriteHeader(code)
+	c.StatusCode = c.writermem.status
 
 	return c
 }

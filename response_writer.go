@@ -103,7 +103,7 @@ func (w *responseWriter) Size() int {
 }
 
 func (w *responseWriter) Written() bool {
-	return w.size != noWritten || w.status != 0
+	return w.size != noWritten
 }
 
 // Hijack implements the http.Hijacker interface.
