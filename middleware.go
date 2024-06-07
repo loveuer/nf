@@ -2,9 +2,11 @@ package nf
 
 import (
 	"fmt"
-	"log"
+	"github.com/google/uuid"
+	"github.com/loveuer/nf/nft/log"
 	"os"
 	"runtime/debug"
+	"strings"
 	"time"
 )
 
@@ -27,51 +29,44 @@ func NewRecover(enableStackTrace bool) HandlerFunc {
 	}
 }
 
-func NewLogger() HandlerFunc {
-	l := log.New(os.Stdout, "[NF] ", 0)
-
-	durationFormat := func(num int64) string {
-		var (
-			unit = "ns"
-		)
-
-		if num > 1000 {
-			num = num / 1000
-			unit = "µs"
-		}
-
-		if num > 1000 {
-			num = num / 1000
-			unit = "ms"
-		}
-
-		if num > 1000 {
-			num = num / 1000
-			unit = "s"
-		}
-
-		return fmt.Sprintf("%3d %2s", num, unit)
+func NewLogger(traceHeader ...string) HandlerFunc {
+	Header := "X-Trace-ID"
+	if len(traceHeader) > 0 && traceHeader[0] != "" {
+		Header = traceHeader[0]
 	}
 
 	return func(c *Ctx) error {
-		start := time.Now()
+		var (
+			now   = time.Now()
+			trace = c.Get(Header)
+			logFn func(msg string, data ...any)
+			ip    = c.IP()
+		)
+
+		if trace == "" {
+			trace = uuid.Must(uuid.NewV7()).String()
+		}
+
+		c.SetHeader(Header, trace)
+
+		traces := strings.Split(trace, "-")
+		shortTrace := traces[len(traces)-1]
 
 		err := c.Next()
+		duration := time.Since(now)
 
-		var (
-			duration = time.Now().Sub(start).Nanoseconds()
-			status   = c.StatusCode
-			path     = c.path
-			method   = c.Request.Method
-		)
+		msg := fmt.Sprintf("NF | %s | %15s | %3d | %s | %6s | %s", shortTrace, ip, c.StatusCode, HumanDuration(duration.Nanoseconds()), c.Method(), c.Path())
 
-		l.Printf("%s | %5s | %d | %s | %s",
-			start.Format("06/01/02T15:04:05"),
-			method,
-			status,
-			durationFormat(duration),
-			path,
-		)
+		switch {
+		case c.StatusCode >= 500:
+			logFn = log.Error
+		case c.StatusCode >= 400:
+			logFn = log.Warn
+		default:
+			logFn = log.Info
+		}
+
+		logFn(msg)
 
 		return err
 	}
