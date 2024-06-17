@@ -202,17 +202,19 @@ func (a *App) handleHTTPRequest(c *Ctx) {
 		}
 
 		if len(allowed) > 0 {
-			c.handlers = a.combineHandlers()
+			c.handlers = a.combineHandlers(a.config.MethodNotAllowedHandler)
 
-			serveError(c, a.config.MethodNotAllowedHandler)
+			_ = c.Next()
 
 			return
 		}
 	}
 
-	c.handlers = a.combineHandlers()
+	c.handlers = a.combineHandlers(a.config.NotFoundHandler)
 
-	serveError(c, a.config.NotFoundHandler)
+	_ = c.Next()
+
+	return
 }
 
 func errorHandler(c *Ctx) error {
