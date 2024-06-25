@@ -17,7 +17,7 @@ import (
 type Ctx struct {
 	lock       sync.Mutex
 	writermem  responseWriter
-	writer     http.ResponseWriter
+	Writer     ResponseWriter
 	Request    *http.Request
 	path       string
 	method     string
@@ -39,7 +39,6 @@ func newContext(app *App, writer http.ResponseWriter, request *http.Request) *Ct
 
 	ctx := &Ctx{
 		lock:       sync.Mutex{},
-		writer:     writer,
 		Request:    request,
 		path:       request.URL.Path,
 		method:     request.Method,
@@ -54,10 +53,12 @@ func newContext(app *App, writer http.ResponseWriter, request *http.Request) *Ct
 	}
 
 	ctx.writermem = responseWriter{
-		ResponseWriter: ctx.writer,
+		ResponseWriter: writer,
 		size:           -1,
 		status:         0,
 	}
+
+	ctx.Writer = &ctx.writermem
 
 	return ctx
 }
@@ -303,11 +304,11 @@ func (c *Ctx) SSEvent(event string, data interface{}) error {
 	c.Set("Cache-Control", "no-cache")
 	c.Set("Transfer-Encoding", "chunked")
 
-	return sse.Encode(c.writer, sse.Event{Event: event, Data: data})
+	return sse.Encode(c.Writer, sse.Event{Event: event, Data: data})
 }
 
 func (c *Ctx) Flush() error {
-	if f, ok := c.writer.(http.Flusher); ok {
+	if f, ok := c.Writer.(http.Flusher); ok {
 		f.Flush()
 		return nil
 	}
@@ -315,13 +316,9 @@ func (c *Ctx) Flush() error {
 	return errors.New("http.Flusher is not implemented")
 }
 
-func (c *Ctx) RawWriter() http.ResponseWriter {
-	return c.writer
-}
-
 func (c *Ctx) HTML(html string) error {
 	c.SetHeader("Content-Type", "text/html")
-	_, err := c.writer.Write([]byte(html))
+	_, err := c.Write([]byte(html))
 	return err
 }
 

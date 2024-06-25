@@ -273,6 +273,6 @@ func redirectRequest(c *Ctx) {
 
 	//debugPrint("redirecting request %d: %s --> %s", code, rPath, rURL)
 
-	http.Redirect(c.writer, req, rURL, code)
+	http.Redirect(c.Writer, req, rURL, code)
 	c.writermem.WriteHeaderNow()
 }

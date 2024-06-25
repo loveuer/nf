@@ -42,8 +42,9 @@ type ResponseWriter interface {
 
 type responseWriter struct {
 	http.ResponseWriter
-	size   int
-	status int
+	written bool
+	size    int
+	status  int
 }
 
 var _ ResponseWriter = (*responseWriter)(nil)
@@ -103,7 +104,7 @@ func (w *responseWriter) Size() int {
 }
 
 func (w *responseWriter) Written() bool {
-	return w.size != noWritten
+	return w.size != noWritten || w.written
 }
 
 // Hijack implements the http.Hijacker interface.
