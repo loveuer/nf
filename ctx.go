@@ -14,6 +14,10 @@ import (
 	"sync"
 )
 
+var (
+	forwardHeaders = []string{"CF-Connecting-IP", "X-Forwarded-For", "X-Real-Ip"}
+)
+
 type Ctx struct {
 	lock       sync.Mutex
 	writermem  responseWriter
@@ -191,11 +195,24 @@ func (c *Ctx) Get(key string, defaultValue ...string) string {
 	return value
 }
 
-func (c *Ctx) IP() string {
+func (c *Ctx) IP(useProxyHeader ...bool) string {
 	ip, _, err := net.SplitHostPort(strings.TrimSpace(c.Request.RemoteAddr))
 	if err != nil {
 		return ""
 	}
+
+	if len(useProxyHeader) > 0 && useProxyHeader[0] {
+		for _, h := range forwardHeaders {
+			for _, rip := range strings.Split(c.Request.Header.Get(h), ",") {
+				realIP := net.ParseIP(strings.Replace(rip, " ", "", -1))
+				if check := net.ParseIP(realIP.String()); check != nil {
+					ip = realIP.String()
+					break
+				}
+			}
+		}
+	}
+
 	return ip
 }
 
