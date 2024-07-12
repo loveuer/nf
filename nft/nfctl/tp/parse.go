@@ -7,10 +7,10 @@ import (
 	"strings"
 )
 
-func ParseCmd(pwd string, content []byte) ([]TpCmd, error) {
+func ParseCmd(pwd string, content []byte) ([]Cmd, error) {
 	var (
 		err   error
-		cmds  = make([]TpCmd, 0)
+		cmds  = make([]Cmd, 0)
 		start = false
 	)
 
@@ -24,7 +24,7 @@ func ParseCmd(pwd string, content []byte) ([]TpCmd, error) {
 			continue
 		}
 
-		if strings.HasPrefix(line, "#") {
+		if !start && strings.HasPrefix(line, "#") {
 			continue
 		}
 
@@ -44,7 +44,7 @@ func ParseCmd(pwd string, content []byte) ([]TpCmd, error) {
 				continue
 			}
 
-			var cmd TpCmd
+			var cmd Cmd
 			if cmd, err = ParseBlock(pwd, record); err != nil {
 				return nil, err
 			}
@@ -66,10 +66,12 @@ func ParseCmd(pwd string, content []byte) ([]TpCmd, error) {
 	return cmds, err
 }
 
-func ParseBlock(pwd string, lines []string) (TpCmd, error) {
+func ParseBlock(pwd string, lines []string) (Cmd, error) {
 	switch lines[0] {
-	case "!replace":
-		return newReplace(pwd, lines[1:])
+	case "!replace content":
+		return newReplaceContent(pwd, lines[1:])
+	case "!replace name":
+		return newReplaceName(pwd, lines[1:])
 	case "!generate":
 		return newGenerate(pwd, lines[1:])
 	}

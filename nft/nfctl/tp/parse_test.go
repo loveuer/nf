@@ -7,43 +7,16 @@ import (
 )
 
 func TestParseInitFile(t *testing.T) {
-	const init_bs = `
-!replace
-content
-reg
-*.go
-ultone => {{.PROJECT_NAME}}
-EOF
-
-!replace
-content
-exact
-go.mod
-module ultone => module {{.PROJECT_NAME}}
-EOF
-
-!replace
-name
-main.go => loveuer.go
-EOF
-
-!generate
-readme.md
-# {{.PROJECT_NAME}}
-
-### run
-- ` + "`" + `go run . --help` + "`" + `
-- ` + "`" + `go run .` + "`" + `
-
-### build
-- ` + "`" + `docker build -t {repo:tag} -f Dockerfile .` + "`" + `
-EOF
-`
-	data := map[string]any{
-		"PROJECT_NAME": "loveuer",
+	bs, err := os.ReadFile("xtest")
+	if err != nil {
+		log.Fatal(err.Error())
 	}
 
-	result, err := RenderVar([]byte(init_bs), data)
+	data := map[string]any{
+		"PROJECT_NAME": "myproject",
+	}
+
+	result, err := RenderVar(bs, data)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -57,5 +30,8 @@ EOF
 
 	for _, item := range cmds {
 		log.Info("one cmd => %s\n\n", item.String())
+		if err = item.Execute(); err != nil {
+			log.Fatal(err.Error())
+		}
 	}
 }
