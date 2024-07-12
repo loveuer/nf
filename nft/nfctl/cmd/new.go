@@ -126,6 +126,8 @@ func initNew() {
 			log.Warn("remove .git folder err: %s", err.Error())
 		}
 
+		log.Info("🎉 create project [%s] 成功!!!", args[0])
+
 		return nil
 	}
 }

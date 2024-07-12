@@ -6,6 +6,7 @@ import (
 	"github.com/loveuer/nf/nft/nfctl/version"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -16,4 +17,7 @@ func main() {
 	defer version.Fn()
 
 	_ = cmd.Root.ExecuteContext(ctx)
+
+	// 延迟以便 check 检查
+	time.Sleep(1500 * time.Millisecond)
 }

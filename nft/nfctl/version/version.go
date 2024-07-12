@@ -11,7 +11,7 @@ import (
 	"sync"
 )
 
-const Version = "v24.07.12-r1"
+const Version = "v24.07.12-r2"
 
 var (
 	lk      = &sync.Mutex{}
@@ -19,7 +19,7 @@ var (
 	upgrade = func(v string) func() {
 		return func() {
 			color.Green("\n🎉 🎉 🎉 [nfctl] New Version Found: %s", v)
-			color.Cyan("Upgrade it with: [go install github.com/loveuer/nf/nft/nfctl@latest]")
+			color.Cyan("Upgrade it with: [go install github.com/loveuer/nf/nft/nfctl@master]")
 			fmt.Print("Or Download by: ")
 			color.Cyan(termlink.Link("Releases", "https://github.com/loveuer/nf/releases"))
 			fmt.Println()
