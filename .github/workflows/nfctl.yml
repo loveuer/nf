@@ -1,0 +1,62 @@
+name: Auto Build
+on:
+  push:
+    branches:
+      - 'master'
+
+env:
+  RELEASE_VERSION: v24.07.13-r1
+
+jobs:
+  build-job:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      repository-projects: write
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: install golang
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: build linux amd64
+        run: CGO_ENABLE=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s -w' -o "dist/nfctl-linux_amd64-${{ env.RELEASE_VERSION }}" nft/nfctl/main.go
+
+      - name: build linux arm64
+        run: CGO_ENABLE=0 GOOS=linux GOARCH=arm64 go build -ldflags='-s -w' -o "dist/nfctl-linux_arm64-${{ env.RELEASE_VERSION }}" nft/nfctl/main.go
+
+      - name: build windows amd64
+        run: CGO_ENABLE=0 GOOS=windows GOARCH=amd64 go build -ldflags='-s -w' -o "dist/nfctl-win_amd64-${{ env.RELEASE_VERSION }}.exe" nft/nfctl/main.go
+
+      - name: build windows arm64
+        run: CGO_ENABLE=0 GOOS=windows GOARCH=arm64 go build -ldflags='-s -w' -o "dist/nfctl-win_arm64-${{ env.RELEASE_VERSION }}.exe" nft/nfctl/main.go
+
+      - name: build darwin amd64
+        run: CGO_ENABLE=0 GOOS=darwin GOARCH=amd64 go build -ldflags='-s -w' -o "dist/nfctl-darwin_arm64-${{ env.RELEASE_VERSION }}" nft/nfctl/main.go
+
+      - name: build darwin arm64
+        run: CGO_ENABLE=0 GOOS=darwin GOARCH=arm64 go build -ldflags='-s -w' -o "dist/nfctl-darwin_arm64-${{ env.RELEASE_VERSION }}" nft/nfctl/main.go
+
+      - name: show all builds
+        run: ls -lash dist
+
+      - name: create releases
+        id: create_releases
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          automatic_release_tag: "Release-nfctl-${{ env.RELEASE_VERSION }}"
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          title: "Release_${{ env.RELEASE_VERSION }}"
+          prerelease: false
+          files: |
+            dist/nfctl-linux_amd64-${{ env.RELEASE_VERSION }}
+            dist/nfctl-linux_arm64-${{ env.RELEASE_VERSION }}
+            dist/nfctl-win_amd64-${{ env.RELEASE_VERSION }}.exe
+            dist/nfctl-win_arm64-${{ env.RELEASE_VERSION }}.exe
+            dist/nfctl-darwin_arm64-${{ env.RELEASE_VERSION }}
+            dist/nfctl-darwin_arm64-${{ env.RELEASE_VERSION }}

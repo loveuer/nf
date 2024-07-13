@@ -18,6 +18,9 @@ func main() {
 
 	_ = cmd.Root.ExecuteContext(ctx)
 
-	// 延迟以便 check 检查
-	time.Sleep(1500 * time.Millisecond)
+	select {
+	case <-time.After(3 * time.Second):
+	case <-ctx.Done():
+	case <-version.OkCh:
+	}
 }

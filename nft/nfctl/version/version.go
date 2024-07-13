@@ -11,7 +11,7 @@ import (
 	"sync"
 )
 
-const Version = "v24.07.12-r2"
+const Version = "v24.07.13-r1"
 
 var (
 	lk      = &sync.Mutex{}
@@ -25,7 +25,8 @@ var (
 			fmt.Println()
 		}
 	}
-	Fn = empty
+	Fn   = empty
+	OkCh = make(chan struct{}, 1)
 )
 
 func Check() {
@@ -57,6 +58,7 @@ func Check() {
 					lk.Lock()
 					Fn = upgrade(v)
 					lk.Unlock()
+					OkCh <- struct{}{}
 					return
 				}
 			}
