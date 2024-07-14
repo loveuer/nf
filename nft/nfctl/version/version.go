@@ -1,68 +1,81 @@
 package version
 
 import (
-	"bufio"
+	"context"
+	"crypto/tls"
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/go-resty/resty/v2"
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/loveuer/nf/nft/log"
 	"github.com/savioxavier/termlink"
-	"net/http"
 	"strings"
-	"sync"
+	"time"
 )
-
-const Version = "v24.07.13-r1"
 
 var (
-	lk      = &sync.Mutex{}
-	empty   = func() {}
-	upgrade = func(v string) func() {
-		return func() {
-			color.Green("\n🎉 🎉 🎉 [nfctl] New Version Found: %s", v)
-			color.Cyan("Upgrade it with: [go install github.com/loveuer/nf/nft/nfctl@master]")
-			fmt.Print("Or Download by: ")
-			color.Cyan(termlink.Link("Releases", "https://github.com/loveuer/nf/releases"))
-			fmt.Println()
-		}
-	}
-	Fn   = empty
-	OkCh = make(chan struct{}, 1)
+	client = resty.New().SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+	uri    = "https://raw.gitcode.com/loveuer/nf/raw/master/nft/nfctl/version/var.go"
+	prefix = "const Version = "
 )
 
-func Check() {
-	ready := make(chan struct{})
-	go func() {
-		ready <- struct{}{}
-		uri := "https://raw.gitcode.com/loveuer/nf/raw/master/nft/nfctl/version/version.go"
-		prefix := "const Version = "
-		resp, err := http.Get(uri)
-		if err != nil {
-			log.Debug("[Check] http get[%s] err: %v", uri, err.Error())
-			return
+func UpgradePrint(newVersion string) {
+	t := table.NewWriter()
+	t.AppendRows([]table.Row{
+		{color.GreenString("New Version Found: %s", newVersion)},
+		{color.CyanString("Upgrade it with: [go install github.com/loveuer/nf/nft/nfctl@master]")},
+		{fmt.Sprint("Or Download by: ")},
+		{color.CyanString(termlink.Link("Releases", "https://github.com/loveuer/nf/releases"))},
+		{color.CyanString(termlink.Link("Releases", "https://gitcode.com/loveuer/nf/releases"))},
+	})
+
+	fmt.Println(t.Render())
+}
+
+func Check(printUpgradable bool, printNoNeedUpgrade bool, timeout ...int) string {
+	var (
+		v string
+	)
+
+	defer func() {
+		if printUpgradable {
+			if v > Version {
+				UpgradePrint(v)
+			}
 		}
-		defer resp.Body.Close()
 
-		scanner := bufio.NewScanner(resp.Body)
-		scanner.Buffer(make([]byte, 16*1024), 1024*1024)
-
-		for scanner.Scan() {
-			line := scanner.Text()
-			log.Debug("[Check] version.go line: %s", line)
-			if strings.HasPrefix(line, prefix) {
-				v := strings.TrimPrefix(line, prefix)
-				if len(v) > 2 {
-					v = v[1 : len(v)-1]
-				}
-
-				if v != "" && v > Version {
-					lk.Lock()
-					Fn = upgrade(v)
-					lk.Unlock()
-					OkCh <- struct{}{}
-					return
-				}
+		if printNoNeedUpgrade {
+			if v == Version {
+				color.Cyan("Your Version: %s is Newest", Version)
 			}
 		}
 	}()
-	<-ready
+
+	ctx, _ := context.WithTimeout(context.Background(), time.Duration(30)*time.Second)
+	if len(timeout) > 0 && timeout[0] > 0 {
+		ctx, _ = context.WithTimeout(context.Background(), time.Duration(timeout[0])*time.Second)
+	}
+
+	resp, err := client.R().SetContext(ctx).
+		Get(uri)
+	if err != nil {
+		log.Debug("[Check] http get[%s] err: %v", uri, err.Error())
+		return ""
+	}
+
+	log.Debug("[Check] http get[%s] body:\n%s", uri, resp.String())
+
+	for _, line := range strings.Split(resp.String(), "\n") {
+		log.Debug("[Check] version.go line: %s", line)
+		if strings.HasPrefix(line, prefix) {
+			may := strings.TrimPrefix(line, prefix)
+			if len(may) > 2 {
+				v = may[1 : len(may)-1]
+			}
+
+			return v
+		}
+	}
+
+	return ""
 }

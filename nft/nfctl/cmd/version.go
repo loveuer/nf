@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/loveuer/nf/nft/log"
+	"github.com/fatih/color"
 	"github.com/loveuer/nf/nft/nfctl/version"
 	"github.com/spf13/cobra"
 )
@@ -11,7 +11,8 @@ var (
 		Use:   "version",
 		Short: "print nfctl version and exit",
 		Run: func(cmd *cobra.Command, args []string) {
-			log.Info("version: %s", version.Version)
+			color.Cyan("nfctl - version: %s", version.Version)
+			version.Check(true, false, 5)
 		},
 	}
 )

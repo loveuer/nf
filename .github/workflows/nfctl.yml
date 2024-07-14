@@ -5,7 +5,7 @@ on:
       - 'master'
 
 env:
-  RELEASE_VERSION: v24.07.13-r1
+  RELEASE_VERSION: v24.07.14-r1
 
 jobs:
   build-job:

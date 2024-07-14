@@ -7,6 +7,7 @@ import (
 	"github.com/loveuer/nf/nft/nfctl/clone"
 	"github.com/loveuer/nf/nft/nfctl/opt"
 	"github.com/loveuer/nf/nft/nfctl/tp"
+	"github.com/loveuer/nf/nft/nfctl/version"
 	"github.com/spf13/cobra"
 	"net/url"
 	"os"
@@ -33,14 +34,11 @@ nfctl new {project} --template http://username:token@my.gitlab.com/my-zone/my-re
 )
 
 func initNew() {
-	cmdNew.Flags().BoolVar(&opt.Debug, "debug", false, "debug mode")
 	cmdNew.Flags().StringVarP(&template, "template", "t", "", "template name/url[example:ultone, https://github.com/xxx/yyy.git]")
 	cmdNew.Flags().BoolVar(&disableInit, "without-init", false, "don't run template init script")
 
 	cmdNew.RunE = func(cmd *cobra.Command, args []string) error {
-		if opt.Debug {
-			log.SetLogLevel(log.LogLevelDebug)
-		}
+		version.Check(true, false, 5)
 
 		var (
 			err        error
