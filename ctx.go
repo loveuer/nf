@@ -51,11 +51,10 @@ func newContext(app *App, writer http.ResponseWriter, request *http.Request) *Ct
 	}
 
 	c := context.WithValue(request.Context(), TraceKey, traceId)
-	request.WithContext(c)
 
 	ctx := &Ctx{
 		lock:       sync.Mutex{},
-		Request:    request,
+		Request:    request.WithContext(c),
 		path:       request.URL.Path,
 		method:     request.Method,
 		StatusCode: 200,
@@ -75,6 +74,7 @@ func newContext(app *App, writer http.ResponseWriter, request *http.Request) *Ct
 	}
 
 	ctx.Writer = &ctx.writermem
+	ctx.writermem.Header().Set(TraceKey, traceId)
 
 	return ctx
 }

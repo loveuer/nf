@@ -2,11 +2,9 @@ package nf
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/loveuer/nf/nft/log"
 	"os"
 	"runtime/debug"
-	"strings"
 	"time"
 )
 
@@ -29,33 +27,19 @@ func NewRecover(enableStackTrace bool) HandlerFunc {
 	}
 }
 
-func NewLogger(traceHeader ...string) HandlerFunc {
-	Header := "X-Trace-ID"
-	if len(traceHeader) > 0 && traceHeader[0] != "" {
-		Header = traceHeader[0]
-	}
+func NewLogger() HandlerFunc {
 
 	return func(c *Ctx) error {
 		var (
 			now   = time.Now()
-			trace = c.Get(Header)
 			logFn func(msg string, data ...any)
 			ip    = c.IP()
 		)
 
-		if trace == "" {
-			trace = uuid.Must(uuid.NewV7()).String()
-		}
-
-		c.SetHeader(Header, trace)
-
-		traces := strings.Split(trace, "-")
-		shortTrace := traces[len(traces)-1]
-
 		err := c.Next()
 		duration := time.Since(now)
 
-		msg := fmt.Sprintf("NF | %s | %15s | %3d | %s | %6s | %s", shortTrace, ip, c.StatusCode, HumanDuration(duration.Nanoseconds()), c.Method(), c.Path())
+		msg := fmt.Sprintf("NF | %v | %15s | %3d | %s | %6s | %s", c.Context().Value(TraceKey), ip, c.StatusCode, HumanDuration(duration.Nanoseconds()), c.Method(), c.Path())
 
 		switch {
 		case c.StatusCode >= 500:

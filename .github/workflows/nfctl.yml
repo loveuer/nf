@@ -2,7 +2,7 @@ name: Auto Build
 on:
   push:
     branches:
-      - 'master'
+      - 'release/nfctl/*'
 
 env:
   RELEASE_VERSION: v24.07.14-r3
