@@ -2,9 +2,11 @@ package nf
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/loveuer/nf/internal/sse"
 	"io"
 	"mime/multipart"
@@ -38,8 +40,18 @@ type Ctx struct {
 
 func newContext(app *App, writer http.ResponseWriter, request *http.Request) *Ctx {
 
-	skippedNodes := make([]skippedNode, 0, app.maxSections)
-	v := make(Params, 0, app.maxParams)
+	var (
+		traceId      string
+		skippedNodes = make([]skippedNode, 0, app.maxSections)
+		v            = make(Params, 0, app.maxParams)
+	)
+
+	if traceId = request.Header.Get(TraceKey); traceId == "" {
+		traceId = uuid.Must(uuid.NewV7()).String()
+	}
+
+	c := context.WithValue(request.Context(), TraceKey, traceId)
+	request.WithContext(c)
 
 	ctx := &Ctx{
 		lock:       sync.Mutex{},
@@ -110,6 +122,10 @@ func (c *Ctx) Cookies(key string, defaultValue ...string) string {
 	}
 
 	return cookie.Value
+}
+
+func (c *Ctx) Context() context.Context {
+	return c.Request.Context()
 }
 
 func (c *Ctx) Next() error {
