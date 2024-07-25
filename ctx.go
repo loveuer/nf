@@ -289,23 +289,23 @@ func (c *Ctx) Status(code int) *Ctx {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	c.writermem.WriteHeader(code)
+	c.Writer.WriteHeader(code)
 	c.StatusCode = c.writermem.status
 
 	return c
 }
 
 func (c *Ctx) Set(key string, value string) {
-	c.writermem.Header().Set(key, value)
+	c.Writer.Header().Set(key, value)
 }
 
 func (c *Ctx) SetHeader(key string, value string) {
-	c.writermem.Header().Set(key, value)
+	c.Writer.Header().Set(key, value)
 }
 
 func (c *Ctx) SendStatus(code int) error {
 	c.Status(code)
-	c.writermem.WriteHeaderNow()
+	c.Writer.WriteHeaderNow()
 	return nil
 }
 
@@ -323,7 +323,7 @@ func (c *Ctx) Writef(format string, values ...interface{}) (int, error) {
 func (c *Ctx) JSON(data interface{}) error {
 	c.SetHeader("Content-Type", MIMEApplicationJSON)
 
-	encoder := json.NewEncoder(&c.writermem)
+	encoder := json.NewEncoder(c.Writer)
 
 	if err := encoder.Encode(data); err != nil {
 		return err
@@ -356,5 +356,5 @@ func (c *Ctx) HTML(html string) error {
 }
 
 func (c *Ctx) Write(data []byte) (int, error) {
-	return c.writermem.Write(data)
+	return c.Writer.Write(data)
 }
