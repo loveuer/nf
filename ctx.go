@@ -295,10 +295,17 @@ func (c *Ctx) Status(code int) *Ctx {
 	return c
 }
 
+// Set set response header
 func (c *Ctx) Set(key string, value string) {
 	c.Writer.Header().Set(key, value)
 }
 
+// AddHeader add response header
+func (c *Ctx) AddHeader(key string, value string) {
+	c.Writer.Header().Add(key, value)
+}
+
+// SetHeader set response header
 func (c *Ctx) SetHeader(key string, value string) {
 	c.Writer.Header().Set(key, value)
 }

@@ -21,7 +21,7 @@ var (
 		os.Exit(1)
 	}
 
-	defaultLogger = &logger{
+	DefaultLogger = &logger{
 		Mutex:      sync.Mutex{},
 		timeFormat: "2006-01-02T15:04:05",
 		writer:     os.Stdout,
@@ -36,32 +36,32 @@ var (
 )
 
 func SetTimeFormat(format string) {
-	defaultLogger.SetTimeFormat(format)
+	DefaultLogger.SetTimeFormat(format)
 }
 
 func SetLogLevel(level LogLevel) {
-	defaultLogger.SetLogLevel(level)
+	DefaultLogger.SetLogLevel(level)
 }
 
 func Debug(msg string, data ...any) {
-	defaultLogger.Debug(msg, data...)
+	DefaultLogger.Debug(msg, data...)
 }
 func Info(msg string, data ...any) {
-	defaultLogger.Info(msg, data...)
+	DefaultLogger.Info(msg, data...)
 }
 
 func Warn(msg string, data ...any) {
-	defaultLogger.Warn(msg, data...)
+	DefaultLogger.Warn(msg, data...)
 }
 
 func Error(msg string, data ...any) {
-	defaultLogger.Error(msg, data...)
+	DefaultLogger.Error(msg, data...)
 }
 
 func Panic(msg string, data ...any) {
-	defaultLogger.Panic(msg, data...)
+	DefaultLogger.Panic(msg, data...)
 }
 
 func Fatal(msg string, data ...any) {
-	defaultLogger.Fatal(msg, data...)
+	DefaultLogger.Fatal(msg, data...)
 }
