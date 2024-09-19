@@ -2,9 +2,10 @@ package resp
 
 import (
 	"fmt"
-	"github.com/loveuer/nf"
 	"strconv"
 	"strings"
+
+	"github.com/loveuer/nf"
 )
 
 func handleEmptyMsg(status uint32, msg string) string {
@@ -100,6 +101,18 @@ func Resp403(c *nf.Ctx, data any, msgs ...string) error {
 	}
 
 	return Resp(c, 403, msg, err, data)
+}
+
+func Resp418(c *nf.Ctx, data any, msgs ...string) error {
+	msg := MSG418
+	err := ""
+
+	if len(msgs) > 0 && msgs[0] != "" {
+		msg = fmt.Sprintf("%s: %s", msg, strings.Join(msgs, "; "))
+		err = ""
+	}
+
+	return Resp(c, 418, msg, err, data)
 }
 
 func Resp429(c *nf.Ctx, data any, msgs ...string) error {
