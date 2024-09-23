@@ -3,15 +3,16 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"os"
+	"path"
+
 	"github.com/loveuer/nf/nft/log"
 	"github.com/loveuer/nf/nft/nfctl/clone"
 	"github.com/loveuer/nf/nft/nfctl/opt"
 	"github.com/loveuer/nf/nft/nfctl/tp"
 	"github.com/loveuer/nf/nft/nfctl/version"
 	"github.com/spf13/cobra"
-	"net/url"
-	"os"
-	"path"
 )
 
 var (
@@ -44,6 +45,7 @@ func initNew() {
 			err        error
 			urlIns     *url.URL
 			pwd        string
+			moduleName string
 			projectDir string
 			initBs     []byte
 			renderBs   []byte
@@ -58,7 +60,8 @@ func initNew() {
 			return fmt.Errorf("get work dir err")
 		}
 
-		projectDir = path.Join(pwd, args[0])
+		moduleName = args[0]
+		projectDir = path.Join(pwd, path.Base(args[0]))
 
 		if _, err = os.Stat(projectDir); !errors.Is(err, os.ErrNotExist) {
 			return fmt.Errorf("project folder already exist")
@@ -101,7 +104,8 @@ func initNew() {
 		}
 
 		if renderBs, err = tp.RenderVar(initBs, map[string]any{
-			"PROJECT_NAME": args[0],
+			"PROJECT_NAME": projectDir,
+			"MODULE_NAME":  moduleName,
 		}); err != nil {
 			return fmt.Errorf("render template init script err: %v", err)
 		}

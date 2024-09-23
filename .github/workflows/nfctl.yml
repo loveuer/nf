@@ -5,7 +5,7 @@ on:
       - 'release/nfctl/*'
 
 env:
-  RELEASE_VERSION: v24.07.14-r3
+  RELEASE_VERSION: v24.09.23-r1
 
 jobs:
   build-job:
