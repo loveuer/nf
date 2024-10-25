@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/loveuer/nf/internal/sse"
+	"html/template"
 	"io"
 	"mime/multipart"
 	"net"
@@ -360,6 +361,21 @@ func (c *Ctx) HTML(html string) error {
 	c.SetHeader("Content-Type", "text/html")
 	_, err := c.Write([]byte(html))
 	return err
+}
+
+func (c *Ctx) RenderHTML(name, html string, obj any) error {
+	c.SetHeader("Content-Type", "text/html")
+	t, err := template.New(name).Parse(html)
+	if err != nil {
+		return err
+	}
+
+	return t.Execute(c.Writer, obj)
+}
+
+func (c *Ctx) Redirect(url string, code int) error {
+	http.Redirect(c.Writer, c.Request, url, code)
+	return nil
 }
 
 func (c *Ctx) Write(data []byte) (int, error) {
