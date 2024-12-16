@@ -30,12 +30,12 @@ nfctl new {project} --template http://username:token@my.gitlab.com/my-zone/my-re
 	disableInit bool
 
 	preTemplateMap = map[string]string{
-		"ultone": "https://gitcode.com/loveuer/ultone.git",
+		"ultone": "https://gitea.loveuer.com/loveuer/ultone.git",
 	}
 )
 
 func initNew() {
-	cmdNew.Flags().StringVarP(&template, "template", "t", "", "template name/url[example:ultone, https://github.com/xxx/yyy.git]")
+	cmdNew.Flags().StringVarP(&template, "template", "t", "ultone", "template name/url[example:ultone, https://github.com/xxx/yyy.git]")
 	cmdNew.Flags().BoolVar(&disableInit, "without-init", false, "don't run template init script")
 
 	cmdNew.RunE = func(cmd *cobra.Command, args []string) error {
@@ -67,7 +67,7 @@ func initNew() {
 			return fmt.Errorf("project folder already exist")
 		}
 
-		if err = os.MkdirAll(projectDir, 0750); err != nil {
+		if err = os.MkdirAll(projectDir, 0o750); err != nil {
 			return fmt.Errorf("create project dir err: %v", err)
 		}
 

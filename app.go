@@ -5,13 +5,15 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"github.com/loveuer/nf/internal/bytesconv"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"path"
 	"regexp"
+	"sync"
+
+	"github.com/loveuer/nf/internal/bytesconv"
 )
 
 var (
@@ -29,6 +31,8 @@ type App struct {
 
 	trees methodTrees
 
+	pool *sync.Pool
+
 	maxParams   uint16
 	maxSections uint16
 
@@ -40,12 +44,33 @@ type App struct {
 	removeExtraSlash       bool // false
 }
 
+func (a *App) allocateContext() *Ctx {
+	var (
+		skippedNodes = make([]skippedNode, 0, a.maxSections)
+		v            = make(Params, 0, a.maxParams)
+	)
+
+	ctx := Ctx{
+		lock:         sync.Mutex{},
+		app:          a,
+		index:        -1,
+		locals:       make(map[string]any),
+		handlers:     make([]HandlerFunc, 0),
+		skippedNodes: &skippedNodes,
+		params:       &v,
+	}
+
+	return &ctx
+}
+
 func (a *App) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	var (
 		err error
-		c   = newContext(a, writer, request)
+		c   = a.pool.Get().(*Ctx)
 		nfe = new(Err)
 	)
+
+	c.reset(writer, request)
 
 	if err = c.verify(); err != nil {
 		if errors.As(err, nfe) {
@@ -58,6 +83,8 @@ func (a *App) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	a.handleHTTPRequest(c)
+
+	a.pool.Put(c)
 }
 
 func (a *App) run(ln net.Listener) error {
@@ -137,9 +164,7 @@ func (a *App) addRoute(method, path string, handlers ...HandlerFunc) {
 }
 
 func (a *App) handleHTTPRequest(c *Ctx) {
-	var (
-		err error
-	)
+	var err error
 
 	httpMethod := c.Request.Method
 	rPath := c.Request.URL.Path
@@ -263,7 +288,7 @@ func redirectFixedPath(c *Ctx, root *node, trailingSlash bool) bool {
 
 func redirectRequest(c *Ctx) {
 	req := c.Request
-	//rPath := req.URL.Path
+	// rPath := req.URL.Path
 	rURL := req.URL.String()
 
 	code := http.StatusMovedPermanently // Permanent redirect, request with GET method
@@ -271,7 +296,7 @@ func redirectRequest(c *Ctx) {
 		code = http.StatusTemporaryRedirect
 	}
 
-	//debugPrint("redirecting request %d: %s --> %s", code, rPath, rURL)
+	// debugPrint("redirecting request %d: %s --> %s", code, rPath, rURL)
 
 	http.Redirect(c.Writer, req, rURL, code)
 	c.writermem.WriteHeaderNow()

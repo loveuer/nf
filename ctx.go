@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/loveuer/nf/internal/sse"
 	"html/template"
 	"io"
 	"mime/multipart"
@@ -15,11 +13,12 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+
+	"github.com/google/uuid"
+	"github.com/loveuer/nf/internal/sse"
 )
 
-var (
-	forwardHeaders = []string{"CF-Connecting-IP", "X-Forwarded-For", "X-Real-Ip"}
-)
+var forwardHeaders = []string{"CF-Connecting-IP", "X-Forwarded-For", "X-Real-Ip"}
 
 type Ctx struct {
 	lock       sync.Mutex
@@ -39,45 +38,29 @@ type Ctx struct {
 	fullPath     string
 }
 
-func newContext(app *App, writer http.ResponseWriter, request *http.Request) *Ctx {
-
-	var (
-		traceId      string
-		skippedNodes = make([]skippedNode, 0, app.maxSections)
-		v            = make(Params, 0, app.maxParams)
-	)
-
-	if traceId = request.Header.Get(TraceKey); traceId == "" {
+func (c *Ctx) reset(w http.ResponseWriter, r *http.Request) {
+	traceId := r.Header.Get(TraceKey)
+	if traceId == "" {
 		traceId = uuid.Must(uuid.NewV7()).String()
 	}
 
-	c := context.WithValue(request.Context(), TraceKey, traceId)
+	c.writermem.reset(w)
 
-	ctx := &Ctx{
-		lock:       sync.Mutex{},
-		Request:    request.WithContext(c),
-		path:       request.URL.Path,
-		method:     request.Method,
-		StatusCode: 200,
+	c.Request = r.WithContext(context.WithValue(r.Context(), TraceKey, traceId))
+	c.Writer = &c.writermem
+	c.handlers = nil
+	c.index = -1
+	c.path = r.URL.Path
+	c.method = r.Method
+	c.StatusCode = 200
 
-		app:          app,
-		index:        -1,
-		locals:       map[string]interface{}{},
-		handlers:     make([]HandlerFunc, 0),
-		skippedNodes: &skippedNodes,
-		params:       &v,
+	c.fullPath = ""
+	*c.params = (*c.params)[:0]
+	*c.skippedNodes = (*c.skippedNodes)[:0]
+	for key := range c.locals {
+		delete(c.locals, key)
 	}
-
-	ctx.writermem = responseWriter{
-		ResponseWriter: writer,
-		size:           -1,
-		status:         0,
-	}
-
-	ctx.Writer = &ctx.writermem
-	ctx.writermem.Header().Set(TraceKey, traceId)
-
-	return ctx
+	c.writermem.Header().Set(TraceKey, traceId)
 }
 
 func (c *Ctx) Locals(key string, value ...interface{}) interface{} {
@@ -109,9 +92,7 @@ func (c *Ctx) Path(overWrite ...string) string {
 }
 
 func (c *Ctx) Cookies(key string, defaultValue ...string) string {
-	var (
-		dv = ""
-	)
+	dv := ""
 
 	if len(defaultValue) > 0 {
 		dv = defaultValue[0]
