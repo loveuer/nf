@@ -2,10 +2,11 @@ package nf
 
 import (
 	"fmt"
-	"github.com/loveuer/nf/nft/log"
 	"os"
 	"runtime/debug"
 	"time"
+
+	"github.com/loveuer/nf/nft/log"
 )
 
 func NewRecover(enableStackTrace bool) HandlerFunc {
@@ -18,7 +19,7 @@ func NewRecover(enableStackTrace bool) HandlerFunc {
 					os.Stderr.WriteString(fmt.Sprintf("recovered from panic: %v\n", r))
 				}
 
-				//serveError(c, 500, []byte(fmt.Sprint(r)))
+				// serveError(c, 500, []byte(fmt.Sprint(r)))
 				_ = c.Status(500).SendString(fmt.Sprint(r))
 			}
 		}()
@@ -28,7 +29,6 @@ func NewRecover(enableStackTrace bool) HandlerFunc {
 }
 
 func NewLogger() HandlerFunc {
-
 	return func(c *Ctx) error {
 		var (
 			now   = time.Now()

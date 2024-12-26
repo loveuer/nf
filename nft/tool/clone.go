@@ -1,16 +1,21 @@
-package clone
+package tool
 
 import (
 	"fmt"
-	"github.com/go-git/go-git/v5"
-	_ "github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
-	"github.com/loveuer/nf/nft/log"
 	"net/url"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
-func Clone(pwd string, ins *url.URL) error {
+func Clone(projectDir string, repoURL string) error {
+	ins, err := url.Parse(repoURL)
+	if err != nil {
+		return err
+	}
+
 	uri := fmt.Sprintf("%s://%s%s", ins.Scheme, ins.Host, ins.Path)
+
 	opt := &git.CloneOptions{
 		URL:             uri,
 		Depth:           1,
@@ -26,8 +31,7 @@ func Clone(pwd string, ins *url.URL) error {
 		}
 	}
 
-	log.Info("start clone %s", uri)
-	_, err := git.PlainClone(pwd, false, opt)
+	_, err = git.PlainClone(projectDir, false, opt)
 	if err != nil {
 		return err
 	}
