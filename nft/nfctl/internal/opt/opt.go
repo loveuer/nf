@@ -8,6 +8,7 @@ type _new struct {
 type config struct {
 	Debug         bool
 	DisableUpdate bool
+	Version       bool
 	New           _new
 }
 

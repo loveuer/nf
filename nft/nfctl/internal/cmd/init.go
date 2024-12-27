@@ -9,6 +9,7 @@ import (
 
 func Init() {
 	initRoot(
+		initVersion(),
 		initUpdate(),
 		initNew(),
 	)
