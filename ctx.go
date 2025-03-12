@@ -1,6 +1,7 @@
 package nf
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -11,6 +12,7 @@ import (
 	"mime/multipart"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 
@@ -110,6 +112,10 @@ func (c *Ctx) Context() context.Context {
 	return c.Request.Context()
 }
 
+func (c *Ctx) SetContext(ctx context.Context) {
+	c.Request = c.Request.WithContext(ctx)
+}
+
 func (c *Ctx) Next() error {
 	c.index++
 
@@ -146,6 +152,11 @@ func (c *Ctx) verify() error {
 	return nil
 }
 
+func (c *Ctx) Body() []byte {
+	bs, _ := io.ReadAll(c.Request.Body)
+	return bs
+}
+
 func (c *Ctx) Param(key string) string {
 	return c.params.ByName(key)
 }
@@ -163,8 +174,8 @@ func (c *Ctx) Form(key string) string {
 }
 
 // FormValue fiber ctx function
-func (c *Ctx) FormValue(key string) string {
-	return c.Request.FormValue(key)
+func (c *Ctx) FormValue(key string, defaultValue ...string) string {
+	return defaultString(c.Request.FormValue(key), defaultValue)
 }
 
 func (c *Ctx) FormFile(key string) (*multipart.FileHeader, error) {
@@ -180,8 +191,20 @@ func (c *Ctx) MultipartForm() (*multipart.Form, error) {
 	return c.Request.MultipartForm, nil
 }
 
-func (c *Ctx) Query(key string) string {
-	return c.Request.URL.Query().Get(key)
+func (c *Ctx) Query(key string, defaultValue ...string) string {
+	return defaultString(c.Request.URL.Query().Get(key), defaultValue)
+}
+
+func (c *Ctx) Queries() map[string]string {
+	qs := c.Request.URL.Query()
+	m := make(map[string]string, len(qs))
+	for k, vs := range qs {
+		for _, v := range vs {
+			m[k] = v
+		}
+	}
+
+	return m
 }
 
 func (c *Ctx) Get(key string, defaultValue ...string) string {
@@ -191,6 +214,14 @@ func (c *Ctx) Get(key string, defaultValue ...string) string {
 	}
 
 	return value
+}
+
+func (c *Ctx) Scheme() string {
+	return c.Request.URL.Scheme
+}
+
+func (c *Ctx) Protocol() string {
+	return c.Request.Proto
 }
 
 func (c *Ctx) IP(useProxyHeader ...bool) string {
@@ -261,6 +292,56 @@ func (c *Ctx) BodyParser(out interface{}) error {
 
 func (c *Ctx) QueryParser(out interface{}) error {
 	return parseToStruct("query", out, c.Request.URL.Query())
+}
+
+func (c *Ctx) SaveFile(fh *multipart.FileHeader, path string) (err error) {
+	var (
+		f  multipart.File
+		ff *os.File
+	)
+
+	f, err = fh.Open()
+	if err != nil {
+		return
+	}
+
+	var ok bool
+	if ff, ok = f.(*os.File); ok {
+		// Windows can't rename files that are opened.
+		if err = f.Close(); err != nil {
+			return
+		}
+
+		// If renaming fails we try the normal copying method.
+		// Renaming could fail if the files are on different devices.
+		if os.Rename(ff.Name(), path) == nil {
+			return nil
+		}
+
+		// Reopen f for the code below.
+		if f, err = fh.Open(); err != nil {
+			return
+		}
+	}
+
+	defer func() {
+		e := f.Close()
+		if err == nil {
+			err = e
+		}
+	}()
+
+	if ff, err = os.Create(path); err != nil {
+		return
+	}
+	defer func() {
+		e := ff.Close()
+		if err == nil {
+			err = e
+		}
+	}()
+	_, err = copyZeroAlloc(ff, f)
+	return
 }
 
 /* ===============================================================
@@ -356,6 +437,22 @@ func (c *Ctx) RenderHTML(name, html string, obj any) error {
 
 func (c *Ctx) Redirect(url string, code int) error {
 	http.Redirect(c.Writer, c.Request, url, code)
+	return nil
+}
+
+func (c *Ctx) SendStream(stream io.Reader, size ...int) (err error) {
+	if len(size) > 0 && size[0] > 0 {
+		_, err = io.CopyN(c.Writer, stream, int64(size[0]))
+	}
+
+	_, err = io.Copy(c.Writer, stream)
+
+	return err
+}
+
+func (c *Ctx) SendStreamWriter(streamWriter func(*bufio.Writer)) error {
+	bw := bufio.NewWriter(c.Writer)
+	streamWriter(bw)
 	return nil
 }
 

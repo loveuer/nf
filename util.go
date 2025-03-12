@@ -1,9 +1,14 @@
 package nf
 
 import (
+	"errors"
 	"fmt"
 	"github.com/loveuer/nf/internal/schema"
+	"io"
+	"net"
+	"os"
 	"strings"
+	"sync"
 )
 
 const (
@@ -222,4 +227,90 @@ func HumanDuration(nano int64) string {
 	}
 
 	return fmt.Sprintf("%6.2f%s", duration, unit)
+}
+
+func defaultString(value string, defaultValue []string) string {
+	if len(value) == 0 && len(defaultValue) > 0 {
+		return defaultValue[0]
+	}
+	return value
+}
+
+var copyBufPool = sync.Pool{
+	New: func() any {
+		return make([]byte, 4096)
+	},
+}
+
+func copyZeroAlloc(w io.Writer, r io.Reader) (int64, error) {
+	var readerIsFile, readerIsConn bool
+
+	switch r := r.(type) {
+	case *os.File:
+		readerIsFile = true
+	case *net.TCPConn:
+		readerIsConn = true
+	case io.WriterTo:
+		return r.WriteTo(w)
+	}
+
+	switch w := w.(type) {
+	case *os.File:
+		if readerIsConn {
+			return w.ReadFrom(r)
+		}
+	case *net.TCPConn:
+		if readerIsFile {
+			// net.WriteTo requires go1.22 or later
+			// Benchmark tests show that on Windows, WriteTo performs
+			// significantly better than ReadFrom. On Linux, however,
+			// ReadFrom slightly outperforms WriteTo. When possible,
+			// copyZeroAlloc aims to perform  better than or as well
+			// as io.Copy, so we use WriteTo whenever possible for
+			// optimal performance.
+			if rt, ok := r.(io.WriterTo); ok {
+				return rt.WriteTo(w)
+			}
+			return w.ReadFrom(r)
+		}
+	case io.ReaderFrom:
+		return w.ReadFrom(r)
+	}
+
+	vbuf := copyBufPool.Get()
+	buf := vbuf.([]byte)
+	n, err := copyBuffer(w, r, buf)
+	copyBufPool.Put(vbuf)
+	return n, err
+}
+
+func copyBuffer(dst io.Writer, src io.Reader, buf []byte) (written int64, err error) {
+	for {
+		nr, er := src.Read(buf)
+		if nr > 0 {
+			nw, ew := dst.Write(buf[0:nr])
+			if nw < 0 || nr < nw {
+				nw = 0
+				if ew == nil {
+					ew = errors.New("invalid write result")
+				}
+			}
+			written += int64(nw)
+			if ew != nil {
+				err = ew
+				break
+			}
+			if nr != nw {
+				err = io.ErrShortWrite
+				break
+			}
+		}
+		if er != nil {
+			if er != io.EOF {
+				err = er
+			}
+			break
+		}
+	}
+	return written, err
 }
