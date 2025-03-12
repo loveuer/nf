@@ -65,6 +65,15 @@ func (c *Ctx) reset(w http.ResponseWriter, r *http.Request) {
 	c.writermem.Header().Set(TraceKey, traceId)
 }
 
+func (c *Ctx) Drop() error {
+	if h, ok := c.Writer.(http.Hijacker); ok {
+		conn, _, _ := h.Hijack()
+		return conn.Close()
+	}
+
+	return errors.New("hijack failed")
+}
+
 func (c *Ctx) Locals(key string, value ...interface{}) interface{} {
 	data := c.locals[key]
 	if len(value) > 0 {
