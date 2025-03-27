@@ -140,6 +140,12 @@ func (a *App) RunListener(ln net.Listener) error {
 	return a.run(ln)
 }
 
+func (a *App) RunListenerTls(ln net.Listener, tlsConfig *tls.Config) error {
+	a.server = &http.Server{Addr: ln.Addr().String()}
+
+	return a.run(tls.NewListener(ln, tlsConfig))
+}
+
 func (a *App) Shutdown(ctx context.Context) error {
 	return a.server.Shutdown(ctx)
 }
