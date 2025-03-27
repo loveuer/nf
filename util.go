@@ -7,6 +7,8 @@ import (
 	"io"
 	"net"
 	"os"
+	"reflect"
+	"runtime"
 	"strings"
 	"sync"
 )
@@ -313,4 +315,38 @@ func copyBuffer(dst io.Writer, src io.Reader, buf []byte) (written int64, err er
 		}
 	}
 	return written, err
+}
+
+// getFunctionName 获取函数或方法的完整名称
+func getFunctionName(i interface{}) string {
+	v := reflect.ValueOf(i)
+	if v.Kind() != reflect.Func {
+		return "<not a function>"
+	}
+	pc := v.Pointer()
+	if pc == 0 {
+		return "<nil function>"
+	}
+	fn := runtime.FuncForPC(pc)
+	if fn == nil {
+		return "<unknown function>"
+	}
+	return fn.Name()
+}
+
+func _map[T, D any](items []T, fn func(item T, index int) D) []D {
+	values := make([]D, len(items))
+	for idx, item := range items {
+		values[idx] = fn(item, idx)
+	}
+
+	return values
+}
+
+func _last[T any](items []T) (v T) {
+	if len(items) == 0 {
+		return
+	}
+
+	return items[len(items)-1]
 }

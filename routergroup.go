@@ -55,14 +55,15 @@ type RouterGroup struct {
 
 var _ IRouter = (*RouterGroup)(nil)
 
-func (group *RouterGroup) Use(middleware ...HandlerFunc) IRoutes {
-	group.Handlers = append(group.Handlers, middleware...)
+func (group *RouterGroup) Use(middlewares ...HandlerFunc) IRoutes {
+	group.Handlers = append(group.Handlers, middlewares...)
+
 	return group.returnObj()
 }
 
-func (group *RouterGroup) Group(relativePath string, handlers ...HandlerFunc) *RouterGroup {
+func (group *RouterGroup) Group(relativePath string, middlewares ...HandlerFunc) *RouterGroup {
 	return &RouterGroup{
-		Handlers: group.combineHandlers(handlers...),
+		Handlers: group.combineHandlers(middlewares...),
 		basePath: group.calculateAbsolutePath(relativePath),
 		app:      group.app,
 	}
@@ -76,6 +77,7 @@ func (group *RouterGroup) handle(httpMethod, relativePath string, handlers ...Ha
 	absolutePath := group.calculateAbsolutePath(relativePath)
 	handlers = group.combineHandlers(handlers...)
 	group.app.addRoute(httpMethod, absolutePath, handlers...)
+
 	return group.returnObj()
 }
 
@@ -83,6 +85,7 @@ func (group *RouterGroup) Handle(httpMethod, relativePath string, handlers ...Ha
 	if matched := regEnLetter.MatchString(httpMethod); !matched {
 		panic("http method " + httpMethod + " is not valid")
 	}
+
 	return group.handle(httpMethod, relativePath, handlers...)
 }
 

@@ -100,6 +100,14 @@ func (a *App) run(ln net.Listener) error {
 		fmt.Println(banner + "nf serve at: " + ln.Addr().String() + "\n")
 	}
 
+	if !a.config.DisableMessagePrint {
+		messagePrint(a)
+	}
+
+	if a.config.BeforeServeFn != nil {
+		a.config.BeforeServeFn(a)
+	}
+
 	err := a.server.Serve(ln)
 	if !errors.Is(err, http.ErrServerClosed) || a.config.ErrServeClose {
 		return err
@@ -136,14 +144,46 @@ func (a *App) Shutdown(ctx context.Context) error {
 	return a.server.Shutdown(ctx)
 }
 
+type RouteInfo struct {
+	Method      string
+	Path        string
+	Handler     string
+	HandlerFunc HandlerFunc
+}
+
+// RoutesInfo defines a RouteInfo slice.
+func (a *App) GetRoutes() (routes []RouteInfo) {
+	for _, tree := range a.trees {
+		routes = iterate("", tree.method, routes, tree.root)
+	}
+
+	return routes
+}
+
+func iterate(path, method string, routes []RouteInfo, root *node) []RouteInfo {
+	path += root.path
+	if len(root.handlers) > 0 {
+		handlerFunc := _last(root.handlers)
+
+		routes = append(routes, RouteInfo{
+			Method:      method,
+			Path:        path,
+			Handler:     getFunctionName(handlerFunc),
+			HandlerFunc: handlerFunc,
+		})
+	}
+
+	for _, child := range root.children {
+		routes = iterate(path, method, routes, child)
+	}
+
+	return routes
+}
+
 func (a *App) addRoute(method, path string, handlers ...HandlerFunc) {
 	elsePanic(path[0] == '/', "path must begin with '/'")
 	elsePanic(method != "", "HTTP method can not be empty")
 	elsePanic(len(handlers) > 0, "without enable not implement, there must be at least one handler")
-
-	if !a.config.DisableMessagePrint {
-		fmt.Printf("[NF] Add Route: %-8s - %-25s (%2d handlers)\n", method, path, len(handlers))
-	}
 
 	root := a.trees.get(method)
 	if root == nil {
@@ -288,7 +328,7 @@ func redirectFixedPath(c *Ctx, root *node, trailingSlash bool) bool {
 
 func redirectRequest(c *Ctx) {
 	req := c.Request
-	// rPath := req.URL.Path
+	// rPath := req.URL.basePath
 	rURL := req.URL.String()
 
 	code := http.StatusMovedPermanently // Permanent redirect, request with GET method
@@ -300,4 +340,27 @@ func redirectRequest(c *Ctx) {
 
 	http.Redirect(c.Writer, req, rURL, code)
 	c.writermem.WriteHeaderNow()
+}
+
+func messagePrint(a *App) {
+	rs := a.GetRoutes()
+	lm := 3
+	lp := 0
+	for _, r := range rs {
+		if len(r.Method) > lm {
+			lm = len(r.Method)
+		}
+
+		if len(r.Path) > lp {
+			lp = len(r.Path)
+		}
+	}
+
+	if lp > 50 {
+		lp = 50
+	}
+
+	for _, r := range rs {
+		fmt.Printf(" nf | route | %*s - %*s | %s\n", lm, r.Method, lp, r.Path, r.Handler)
+	}
 }

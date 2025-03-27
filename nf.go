@@ -1,6 +1,8 @@
 package nf
 
-import "sync"
+import (
+	"sync"
+)
 
 const (
 	banner   = "  _  _     _     ___                 _ \n | \\| |___| |_  | __|__ _  _ _ _  __| |\n | .` / _ \\  _| | _/ _ \\ || | ' \\/ _` |\n |_|\\_\\___/\\__| |_|\\___/\\_,_|_||_\\__,_|\n "
@@ -8,6 +10,7 @@ const (
 	_405     = `405 Method Not Allowed`
 	_500     = `500 Internal Server Error`
 	TraceKey = "X-Trace-Id"
+	version  = "nf-0.3.4"
 )
 
 type Map map[string]interface{}
@@ -26,8 +29,9 @@ type Config struct {
 	DisableHttpErrorLog bool `json:"-"`
 
 	// EnableNotImplementHandler bool        `json:"-"`
-	NotFoundHandler         HandlerFunc `json:"-"`
-	MethodNotAllowedHandler HandlerFunc `json:"-"`
+	NotFoundHandler         HandlerFunc  `json:"-"`
+	MethodNotAllowedHandler HandlerFunc  `json:"-"`
+	BeforeServeFn           func(a *App) `json:"-"`
 }
 
 var defaultConfig = &Config{
@@ -54,34 +58,66 @@ func New(config ...Config) *App {
 
 		pool: &sync.Pool{},
 
-		redirectTrailingSlash:  true,  // true
-		redirectFixedPath:      false, // false
-		handleMethodNotAllowed: true,  // false
-		useRawPath:             false, // false
-		unescapePathValues:     true,  // true
-		removeExtraSlash:       false, // false
+		redirectTrailingSlash:  true,
+		redirectFixedPath:      false,
+		handleMethodNotAllowed: true,
+		useRawPath:             false,
+		unescapePathValues:     true,
+		removeExtraSlash:       false,
 	}
 
+	app.config = defaultConfig
+
 	if len(config) > 0 {
-		app.config = &config[0]
+		cfg := config[0]
 
-		if app.config.BodyLimit == 0 {
-			app.config.BodyLimit = defaultConfig.BodyLimit
+		if cfg.DisableMessagePrint {
+			app.config.DisableMessagePrint = cfg.DisableMessagePrint
 		}
 
-		if app.config.NotFoundHandler == nil {
-			app.config.NotFoundHandler = defaultConfig.NotFoundHandler
+		if cfg.DisableBanner {
+			app.config.DisableBanner = cfg.DisableBanner
 		}
 
-		if app.config.MethodNotAllowedHandler == nil {
-			app.config.MethodNotAllowedHandler = defaultConfig.MethodNotAllowedHandler
+		if cfg.DisableLogger {
+			app.config.DisableLogger = cfg.DisableLogger
 		}
 
-	} else {
-		app.config = defaultConfig
+		if cfg.DisableRecover {
+			app.config.DisableRecover = cfg.DisableRecover
+		}
+
+		if cfg.DisableHttpErrorLog {
+			app.config.DisableHttpErrorLog = cfg.DisableHttpErrorLog
+		}
+
+		if cfg.ErrServeClose {
+			app.config.ErrServeClose = cfg.ErrServeClose
+		}
+
+		if cfg.BodyLimit > 0 {
+			app.config.BodyLimit = cfg.BodyLimit
+		}
+
+		if cfg.NotFoundHandler != nil {
+			app.config.NotFoundHandler = cfg.NotFoundHandler
+		}
+
+		if cfg.MethodNotAllowedHandler != nil {
+			app.config.MethodNotAllowedHandler = cfg.MethodNotAllowedHandler
+		}
+
+		if cfg.BeforeServeFn != nil {
+			app.config.BeforeServeFn = cfg.BeforeServeFn
+		}
 	}
 
 	app.RouterGroup.app = app
+
+	app.Use(func(c *Ctx) error {
+		c.SetHeader("server", version)
+		return c.Next()
+	})
 
 	if !app.config.DisableLogger {
 		app.Use(NewLogger())
