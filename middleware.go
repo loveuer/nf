@@ -13,14 +13,15 @@ func NewRecover(enableStackTrace bool) HandlerFunc {
 	return func(c *Ctx) error {
 		defer func() {
 			if r := recover(); r != nil {
+				// Log detailed error internally only
 				if enableStackTrace {
-					os.Stderr.WriteString(fmt.Sprintf("recovered from panic: %v\n%s\n", r, debug.Stack()))
+					os.Stderr.WriteString(fmt.Sprintf("recovered from panic: %v\nStack: %s", r, debug.Stack()))
 				} else {
 					os.Stderr.WriteString(fmt.Sprintf("recovered from panic: %v\n", r))
 				}
 
-				// serveError(c, 500, []byte(fmt.Sprint(r)))
-				_ = c.Status(500).SendString(fmt.Sprint(r))
+				// Send generic error message to client to prevent information disclosure
+				_ = c.Status(500).SendString("Internal Server Error")
 			}
 		}()
 

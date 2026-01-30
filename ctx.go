@@ -13,6 +13,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -208,11 +209,10 @@ func (c *Ctx) Queries() map[string]string {
 	qs := c.Request.URL.Query()
 	m := make(map[string]string, len(qs))
 	for k, vs := range qs {
-		for _, v := range vs {
-			m[k] = v
+		if len(vs) > 0 {
+			m[k] = vs[len(vs)-1]
 		}
 	}
-
 	return m
 }
 
@@ -221,12 +221,17 @@ func (c *Ctx) Get(key string, defaultValue ...string) string {
 	if value == "" && len(defaultValue) > 0 {
 		return defaultValue[0]
 	}
-
 	return value
 }
 
 func (c *Ctx) Scheme() string {
-	return c.Request.URL.Scheme
+	if c.Request.TLS != nil {
+		return "https"
+	}
+	if scheme := c.Get("X-Forwarded-Proto"); scheme != "" {
+		return scheme
+	}
+	return "http"
 }
 
 func (c *Ctx) Protocol() string {
@@ -241,11 +246,12 @@ func (c *Ctx) IP(useProxyHeader ...bool) string {
 
 	if len(useProxyHeader) > 0 && useProxyHeader[0] {
 		for _, h := range forwardHeaders {
-			for _, rip := range strings.Split(c.Request.Header.Get(h), ",") {
-				realIP := net.ParseIP(strings.Replace(rip, " ", "", -1))
-				if check := net.ParseIP(realIP.String()); check != nil {
-					ip = realIP.String()
-					break
+			if rip := c.Request.Header.Get(h); rip != "" {
+				for _, part := range strings.Split(rip, ",") {
+					realIP := strings.TrimSpace(part)
+					if check := net.ParseIP(realIP); check != nil {
+						return realIP
+					}
 				}
 			}
 		}
@@ -268,23 +274,34 @@ func (c *Ctx) BodyParser(out interface{}) error {
 	}
 
 	if strings.HasSuffix(ctype, "json") {
+		// Check if body has already been read
+		if c.Request.Body == nil || c.Request.Body == http.NoBody {
+			return NewNFError(400, "Request body is empty")
+		}
+
+		// Read body once and cache it
 		bs, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			return err
 		}
 		_ = c.Request.Body.Close()
-
+		
+		// Allow multiple parsing by restoring the body
 		c.Request.Body = io.NopCloser(bytes.NewReader(bs))
-
-		return json.Unmarshal(bs, out)
+		
+		// Use json.Decoder for better performance with large bodies
+		decoder := json.NewDecoder(bytes.NewReader(bs))
+		if err := decoder.Decode(out); err != nil {
+			return NewNFError(400, "Invalid JSON: "+err.Error())
+		}
+		
+		return nil
 	}
 
 	if strings.HasPrefix(ctype, MIMEApplicationForm) {
-
 		if err = c.Request.ParseForm(); err != nil {
 			return NewNFError(400, err.Error())
 		}
-
 		return parseToStruct("form", out, c.Request.Form)
 	}
 
@@ -292,7 +309,6 @@ func (c *Ctx) BodyParser(out interface{}) error {
 		if err = c.Request.ParseMultipartForm(c.app.config.BodyLimit); err != nil {
 			return NewNFError(400, err.Error())
 		}
-
 		return parseToStruct("form", out, c.Request.PostForm)
 	}
 
@@ -311,46 +327,20 @@ func (c *Ctx) SaveFile(fh *multipart.FileHeader, path string) (err error) {
 
 	f, err = fh.Open()
 	if err != nil {
-		return
+		return err
 	}
+	defer f.Close()
 
-	var ok bool
-	if ff, ok = f.(*os.File); ok {
-		// Windows can't rename files that are opened.
-		if err = f.Close(); err != nil {
-			return
-		}
-
-		// If renaming fails we try the normal copying method.
-		// Renaming could fail if the files are on different devices.
-		if os.Rename(ff.Name(), path) == nil {
-			return nil
-		}
-
-		// Reopen f for the code below.
-		if f, err = fh.Open(); err != nil {
-			return
-		}
-	}
-
-	defer func() {
-		e := f.Close()
-		if err == nil {
-			err = e
-		}
-	}()
+	// Clean path to prevent path traversal
+	path = filepath.Clean(path)
 
 	if ff, err = os.Create(path); err != nil {
-		return
+		return err
 	}
-	defer func() {
-		e := ff.Close()
-		if err == nil {
-			err = e
-		}
-	}()
+	defer ff.Close()
+
 	_, err = copyZeroAlloc(ff, f)
-	return
+	return err
 }
 
 /* ===============================================================

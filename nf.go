@@ -2,6 +2,7 @@ package nf
 
 import (
 	"sync"
+	"time"
 )
 
 const (
@@ -20,6 +21,11 @@ type Config struct {
 	// Default: 4 * 1024 * 1024
 	BodyLimit int64 `json:"-"`
 
+	// Server timeout configurations
+	ReadTimeout  time.Duration `json:"-"` // Default: 10s, maximum duration for reading the entire request
+	WriteTimeout time.Duration `json:"-"` // Default: 10s, maximum duration before timing out writes of the response
+	IdleTimeout  time.Duration `json:"-"` // Default: 120s, maximum amount of time to wait for the next request
+
 	// if report http.ErrServerClosed as run err
 	ErrServeClose bool `json:"-"`
 
@@ -35,7 +41,10 @@ type Config struct {
 }
 
 var defaultConfig = &Config{
-	BodyLimit: 4 * 1024 * 1024,
+	BodyLimit:    4 * 1024 * 1024,
+	ReadTimeout:  10 * time.Second,
+	WriteTimeout: 10 * time.Second,
+	IdleTimeout:  120 * time.Second,
 	NotFoundHandler: func(c *Ctx) error {
 		c.Set("Content-Type", MIMETextHTML)
 		_, err := c.Status(404).Write([]byte(_404))
@@ -97,6 +106,18 @@ func New(config ...Config) *App {
 
 		if cfg.BodyLimit > 0 {
 			app.config.BodyLimit = cfg.BodyLimit
+		}
+
+		if cfg.ReadTimeout > 0 {
+			app.config.ReadTimeout = cfg.ReadTimeout
+		}
+
+		if cfg.WriteTimeout > 0 {
+			app.config.WriteTimeout = cfg.WriteTimeout
+		}
+
+		if cfg.IdleTimeout > 0 {
+			app.config.IdleTimeout = cfg.IdleTimeout
 		}
 
 		if cfg.NotFoundHandler != nil {

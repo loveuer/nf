@@ -29,7 +29,9 @@ func initUpdate() *cobra.Command {
 }
 
 func doUpdate(ctx context.Context) (err error) {
-	return loading.Do(tool.TimeoutCtx(ctx, 30), func(ctx context.Context, print func(msg string, types ...loading.Type)) error {
+	ctxWithTimeout, cancel := tool.TimeoutCtx(ctx, 30)
+	defer cancel()
+	return loading.Do(ctxWithTimeout, func(ctx context.Context, print func(msg string, types ...loading.Type)) error {
 		print("正在检查更新...")
 		tip := "❗ 请尝试手动更新: go install github.com/loveuer/nf/nft/nfctl@master"
 		version := ""

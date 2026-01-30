@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func Timeout(seconds ...int) (ctx context.Context) {
+func Timeout(seconds ...int) (context.Context, context.CancelFunc) {
 	var duration time.Duration
 
 	if len(seconds) > 0 && seconds[0] > 0 {
@@ -14,12 +14,10 @@ func Timeout(seconds ...int) (ctx context.Context) {
 		duration = time.Duration(30) * time.Second
 	}
 
-	ctx, _ = context.WithTimeout(context.Background(), duration)
-
-	return
+	return context.WithTimeout(context.Background(), duration)
 }
 
-func TimeoutCtx(ctx context.Context, seconds ...int) context.Context {
+func TimeoutCtx(ctx context.Context, seconds ...int) (context.Context, context.CancelFunc) {
 	var duration time.Duration
 
 	if len(seconds) > 0 && seconds[0] > 0 {
@@ -28,7 +26,5 @@ func TimeoutCtx(ctx context.Context, seconds ...int) context.Context {
 		duration = time.Duration(30) * time.Second
 	}
 
-	nctx, _ := context.WithTimeout(ctx, duration)
-
-	return nctx
+	return context.WithTimeout(ctx, duration)
 }

@@ -88,7 +88,12 @@ func (a *App) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 }
 
 func (a *App) run(ln net.Listener) error {
-	srv := &http.Server{Handler: a}
+	srv := &http.Server{
+		Handler:      a,
+		ReadTimeout:  a.config.ReadTimeout,
+		WriteTimeout: a.config.WriteTimeout,
+		IdleTimeout:  a.config.IdleTimeout,
+	}
 
 	if a.config.DisableHttpErrorLog {
 		srv.ErrorLog = log.New(io.Discard, "", 0)
@@ -262,7 +267,12 @@ func (a *App) handleHTTPRequest(c *Ctx) {
 	if a.handleMethodNotAllowed {
 		// According to RFC 7231 section 6.5.5, MUST generate an Allow header field in response
 		// containing a list of the target resource's currently supported methods.
-		allowed := make([]string, 0, len(t)-1)
+		treesLen := len(a.trees)
+		capacity := treesLen - 1
+		if capacity < 0 {
+			capacity = 0
+		}
+		allowed := make([]string, 0, capacity)
 		for _, tree := range a.trees {
 			if tree.method == httpMethod {
 				continue
