@@ -6,7 +6,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/loveuer/nf/nft/nfctl/internal/cmd"
+	"github.com/loveuer/ursa/ursatool/ursactl/internal/cmd"
 )
 
 func init() {

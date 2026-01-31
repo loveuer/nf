@@ -1,4 +1,4 @@
-module github.com/loveuer/nf
+module github.com/loveuer/ursa
 
 go 1.20
 

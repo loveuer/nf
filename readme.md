@@ -1,28 +1,45 @@
-# NF Web Framework
+# Ursa Web Framework
+
+Ursa (🐻 Great Bear) is a fast, simple, and production-ready web framework for Go.
+
+### Installation
+
+```bash
+go get github.com/loveuer/ursa
+```
+
+### Features
+
+- ⚡ High performance with radix tree routing
+- 🛡️ Built-in security middlewares (CORS, Secure headers)
+- ⏱️ Configurable server timeouts
+- 🔍 Request tracking with RequestID
+- 📦 Zero-allocation optimizations
+- 🧪 Comprehensive test coverage
 
 ### Usage
 
-##### basic usage
+##### Basic usage
 
-- get param
+- Get route parameters
 
   ```go
   func main() {
-      app := nf.New()
+      app := ursa.New()
 
-      app.Get("/hello/:name", func(c *nf.Ctx) error {
+      app.Get("/hello/:name", func(c *ursa.Ctx) error {
           name := c.Param("name")
-          return c.JSON(nf.Map{"status": 200, "data": "hello, " + name})
+          return c.JSON(ursa.Map{"status": 200, "data": "hello, " + name})
       })
 
       log.Fatal(app.Run("0.0.0.0:80"))
   }
   ```
 
-- parse request query
+- Parse request query
 
   ```go
-  func handleQuery(c *nf.Ctx) error {
+  func handleQuery(c *ursa.Ctx) error {
       type Req struct {
           Name string   `query:"name"`
           Addr []string `query:"addr"`
@@ -34,17 +51,17 @@
       )
 
       if err = c.QueryParser(&req); err != nil {
-          return nf.NewNFError(400, err.Error())
+          return ursa.NewNFError(400, err.Error())
       }
 
-      return c.JSON(nf.Map{"query": req})
+      return c.JSON(ursa.Map{"query": req})
   }
   ```
 
-- parse application/json body
+- Parse application/json body
 
   ```go
-  func handlePost(c *nf.Ctx) error {
+  func handlePost(c *ursa.Ctx) error {
       type Req struct {
           Name string   `json:"name"`
           Addr []string `json:"addr"`
@@ -57,19 +74,19 @@
       )
 
       if err = c.BodyParser(&req); err != nil {
-          return nf.NewNFError(400, err.Error())
+          return ursa.NewNFError(400, err.Error())
       }
 
-      // can parse body multi times
+      // can parse body multiple times
       if err = c.BodyParser(&reqMap); err != nil {
-          return nf.NewNFError(400, err.Error())
+          return ursa.NewNFError(400, err.Error())
       }
 
-      return c.JSON(nf.Map{"struct": req, "map": reqMap})
+      return c.JSON(ursa.Map{"struct": req, "map": reqMap})
   }
   ```
 
-- pass local value
+- Pass local values between middlewares
 
   ```go
   type User struct {
@@ -78,25 +95,47 @@
   }
 
   func main() {
-      app := nf.New()
+      app := ursa.New()
       app.Use(auth())
 
       app.Get("/item/list", list)
   }
 
-  func auth() nf.HandlerFunc {
-      return func(c *nf.Ctx) error {
+  func auth() ursa.HandlerFunc {
+      return func(c *ursa.Ctx) error {
           c.Locals("user", &User{Id: 1, Username:"user"})
           return c.Next()
       }
   }
 
-  func list(c *nf.Ctx) error {
+  func list(c *ursa.Ctx) error {
       user, ok := c.Locals("user").(*User)
       if !ok {
           return c.Status(401).SendString("login required")
       }
 
-      ...
+      // ...
+      return nil
   }
   ```
+
+### Middlewares
+
+Ursa comes with built-in production-ready middlewares:
+
+```go
+app := ursa.New()
+
+// CORS
+app.Use(ursa.NewCORS())
+
+// Security headers
+app.Use(ursa.NewSecure())
+
+// Request tracking
+app.Use(ursa.NewRequestID())
+```
+
+### License
+
+MIT

@@ -6,5 +6,5 @@ import (
 )
 
 func TestBanner(t *testing.T) {
-	fmt.Printf("%s\nnfctl: %s\n\n", Banner, Version)
+	fmt.Printf("%s\nursactl: %s\n\n", Banner, Version)
 }

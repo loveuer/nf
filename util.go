@@ -1,9 +1,9 @@
-package nf
+package ursa
 
 import (
 	"errors"
 	"fmt"
-	"github.com/loveuer/nf/internal/schema"
+	"github.com/loveuer/ursa/internal/schema"
 	"io"
 	"net"
 	"os"

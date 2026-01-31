@@ -1,4 +1,4 @@
-package nf
+package ursa
 
 // SecureConfig defines the config for Secure middleware
 type SecureConfig struct {

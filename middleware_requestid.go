@@ -1,4 +1,4 @@
-package nf
+package ursa
 
 import (
 	"github.com/google/uuid"

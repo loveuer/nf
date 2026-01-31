@@ -2,13 +2,19 @@
 
 This file provides guidance to Qoder (qoder.com) when working with code in this repository.
 
+## Project Information
+
+**Framework**: Ursa (github.com/loveuer/ursa)  
+**Version**: 1.0.0  
+**Description**: A fast, simple, and production-ready web framework for Go
+
 ## Development Commands
 
 - **Build**: `go build`
 - **Test all**: `go test ./...`
 - **Run single test**: `go test -v -run <TestName>`
 - **Lint**: `golangci-lint run` (standard Go linting, though no config file is present)
-- **NFCTL CLI**: The management tool is located in `nft/nfctl`. To run it: `go run nft/nfctl/main.go`
+- **CLI Tool**: The management tool is located in `ursatool/ursactl`. To run it: `go run ursatool/ursactl/main.go`
 
 ## Code Architecture
 
@@ -25,10 +31,17 @@ This file provides guidance to Qoder (qoder.com) when working with code in this 
 4. If found, the handler chain (middleware + final handler) is assigned to `Ctx.handlers`.
 5. `Ctx.Next()` is called to execute the chain sequentially.
 
+### Built-in Middlewares
+- **NewCORS/NewCORSWithConfig**: CORS (Cross-Origin Resource Sharing) support
+- **NewSecure/NewSecureWithConfig**: Security headers (XSS, Content-Type, Frame Options, HSTS, CSP)
+- **NewRequestID/NewRequestIDWithConfig**: Request tracking with UUID generation
+- **NewLogger**: HTTP request logging
+- **NewRecover**: Panic recovery with stack trace
+
 ### Internal Packages
 - **internal/schema**: Handles the binding and decoding of request data (queries, forms, JSON) into Go structs.
 - **internal/bytesconv**: Optimized zero-allocation conversions between strings and byte slices.
 - **internal/sse**: Server-Sent Events implementation.
 
-### CLI Tool (nfctl)
-Located in `nft/nfctl`, it uses `spf13/cobra` for command-line interaction. It provides utilities for project management and scaffolding.
+### CLI Tool (ursactl)
+Located in `ursatool/ursactl`, it uses `spf13/cobra` for command-line interaction. It provides utilities for project management and scaffolding.

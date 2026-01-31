@@ -3,14 +3,14 @@ package cmd
 import (
 	"os"
 
-	"github.com/loveuer/nf/nft/log"
-	"github.com/loveuer/nf/nft/nfctl/internal/opt"
+	"github.com/loveuer/ursa/ursatool/log"
+	"github.com/loveuer/ursa/ursatool/ursactl/internal/opt"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "nfctl",
-	Short: "nfctl is a tool for quick start a nf projects",
+	Use:   "ursactl",
+	Short: "ursactl is a tool for quick start a nf projects",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if opt.Cfg.Debug {
 			log.SetLogLevel(log.LogLevelDebug)
@@ -36,6 +36,6 @@ var rootCmd = &cobra.Command{
 func initRoot(cmds ...*cobra.Command) {
 	rootCmd.PersistentFlags().BoolVar(&opt.Cfg.Debug, "debug", false, "debug mode")
 	rootCmd.PersistentFlags().BoolVar(&opt.Cfg.DisableUpdate, "disable-update", false, "disable self update")
-	rootCmd.PersistentFlags().BoolVarP(&opt.Cfg.Version, "version", "v", false, "print nfctl version")
+	rootCmd.PersistentFlags().BoolVarP(&opt.Cfg.Version, "version", "v", false, "print ursactl version")
 	rootCmd.AddCommand(cmds...)
 }

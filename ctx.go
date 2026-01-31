@@ -1,4 +1,4 @@
-package nf
+package ursa
 
 import (
 	"bufio"
@@ -18,7 +18,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/loveuer/nf/internal/sse"
+	"github.com/loveuer/ursa/internal/sse"
 )
 
 var forwardHeaders = []string{"CF-Connecting-IP", "X-Forwarded-For", "X-Real-Ip"}

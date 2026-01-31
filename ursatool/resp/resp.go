@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/loveuer/nf"
+	"github.com/loveuer/ursa"
 )
 
 func handleEmptyMsg(status uint32, msg string) string {
@@ -35,19 +35,19 @@ func handleEmptyMsg(status uint32, msg string) string {
 	return msg
 }
 
-func Resp(c *nf.Ctx, status uint32, msg string, err string, data any) error {
+func Resp(c *ursa.Ctx, status uint32, msg string, err string, data any) error {
 	msg = handleEmptyMsg(status, msg)
 
 	c.Set(RealStatusHeader, strconv.Itoa(int(status)))
 
 	if data == nil {
-		return c.JSON(nf.Map{"status": status, "msg": msg, "err": err})
+		return c.JSON(ursa.Map{"status": status, "msg": msg, "err": err})
 	}
 
-	return c.JSON(nf.Map{"status": status, "msg": msg, "err": err, "data": data})
+	return c.JSON(ursa.Map{"status": status, "msg": msg, "err": err, "data": data})
 }
 
-func Resp200(c *nf.Ctx, data any, msgs ...string) error {
+func Resp200(c *ursa.Ctx, data any, msgs ...string) error {
 	msg := MSG200
 
 	if len(msgs) > 0 && msgs[0] != "" {
@@ -57,7 +57,7 @@ func Resp200(c *nf.Ctx, data any, msgs ...string) error {
 	return Resp(c, 200, msg, "", data)
 }
 
-func Resp202(c *nf.Ctx, data any, msgs ...string) error {
+func Resp202(c *ursa.Ctx, data any, msgs ...string) error {
 	msg := MSG202
 
 	if len(msgs) > 0 && msgs[0] != "" {
@@ -67,7 +67,7 @@ func Resp202(c *nf.Ctx, data any, msgs ...string) error {
 	return Resp(c, 202, msg, "", data)
 }
 
-func Resp400(c *nf.Ctx, data any, msgs ...string) error {
+func Resp400(c *ursa.Ctx, data any, msgs ...string) error {
 	msg := MSG400
 	err := ""
 
@@ -79,7 +79,7 @@ func Resp400(c *nf.Ctx, data any, msgs ...string) error {
 	return Resp(c, 400, msg, err, data)
 }
 
-func Resp401(c *nf.Ctx, data any, msgs ...string) error {
+func Resp401(c *ursa.Ctx, data any, msgs ...string) error {
 	msg := MSG401
 	err := ""
 
@@ -91,7 +91,7 @@ func Resp401(c *nf.Ctx, data any, msgs ...string) error {
 	return Resp(c, 401, msg, err, data)
 }
 
-func Resp403(c *nf.Ctx, data any, msgs ...string) error {
+func Resp403(c *ursa.Ctx, data any, msgs ...string) error {
 	msg := MSG403
 	err := ""
 
@@ -103,7 +103,7 @@ func Resp403(c *nf.Ctx, data any, msgs ...string) error {
 	return Resp(c, 403, msg, err, data)
 }
 
-func Resp418(c *nf.Ctx, data any, msgs ...string) error {
+func Resp418(c *ursa.Ctx, data any, msgs ...string) error {
 	msg := MSG418
 	err := ""
 
@@ -115,7 +115,7 @@ func Resp418(c *nf.Ctx, data any, msgs ...string) error {
 	return Resp(c, 418, msg, err, data)
 }
 
-func Resp429(c *nf.Ctx, data any, msgs ...string) error {
+func Resp429(c *ursa.Ctx, data any, msgs ...string) error {
 	msg := MSG429
 	err := ""
 
@@ -127,7 +127,7 @@ func Resp429(c *nf.Ctx, data any, msgs ...string) error {
 	return Resp(c, 429, msg, err, data)
 }
 
-func Resp500(c *nf.Ctx, data any, msgs ...string) error {
+func Resp500(c *ursa.Ctx, data any, msgs ...string) error {
 	msg := MSG500
 	err := ""
 

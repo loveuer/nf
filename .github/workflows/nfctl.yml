@@ -2,7 +2,7 @@ name: Auto Build
 on:
   push:
     branches:
-      - 'release/nfctl/*'
+      - 'release/ursactl/*'
 
 env:
   RELEASE_VERSION: v24.09.23-r1
@@ -25,22 +25,22 @@ jobs:
           go-version: '1.20'
 
       - name: build linux amd64
-        run: CGO_ENABLE=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s -w' -o "dist/nfctl-linux_amd64-${{ env.RELEASE_VERSION }}" nft/nfctl/main.go
+        run: CGO_ENABLE=0 GOOS=linux GOARCH=amd64 go build -ldflags='-s -w' -o "dist/ursactl-linux_amd64-${{ env.RELEASE_VERSION }}" ursatool/ursactl/main.go
 
       - name: build linux arm64
-        run: CGO_ENABLE=0 GOOS=linux GOARCH=arm64 go build -ldflags='-s -w' -o "dist/nfctl-linux_arm64-${{ env.RELEASE_VERSION }}" nft/nfctl/main.go
+        run: CGO_ENABLE=0 GOOS=linux GOARCH=arm64 go build -ldflags='-s -w' -o "dist/ursactl-linux_arm64-${{ env.RELEASE_VERSION }}" ursatool/ursactl/main.go
 
       - name: build windows amd64
-        run: CGO_ENABLE=0 GOOS=windows GOARCH=amd64 go build -ldflags='-s -w' -o "dist/nfctl-win_amd64-${{ env.RELEASE_VERSION }}.exe" nft/nfctl/main.go
+        run: CGO_ENABLE=0 GOOS=windows GOARCH=amd64 go build -ldflags='-s -w' -o "dist/ursactl-win_amd64-${{ env.RELEASE_VERSION }}.exe" ursatool/ursactl/main.go
 
       - name: build windows arm64
-        run: CGO_ENABLE=0 GOOS=windows GOARCH=arm64 go build -ldflags='-s -w' -o "dist/nfctl-win_arm64-${{ env.RELEASE_VERSION }}.exe" nft/nfctl/main.go
+        run: CGO_ENABLE=0 GOOS=windows GOARCH=arm64 go build -ldflags='-s -w' -o "dist/ursactl-win_arm64-${{ env.RELEASE_VERSION }}.exe" ursatool/ursactl/main.go
 
       - name: build darwin amd64
-        run: CGO_ENABLE=0 GOOS=darwin GOARCH=amd64 go build -ldflags='-s -w' -o "dist/nfctl-darwin_amd64-${{ env.RELEASE_VERSION }}" nft/nfctl/main.go
+        run: CGO_ENABLE=0 GOOS=darwin GOARCH=amd64 go build -ldflags='-s -w' -o "dist/ursactl-darwin_amd64-${{ env.RELEASE_VERSION }}" ursatool/ursactl/main.go
 
       - name: build darwin arm64
-        run: CGO_ENABLE=0 GOOS=darwin GOARCH=arm64 go build -ldflags='-s -w' -o "dist/nfctl-darwin_arm64-${{ env.RELEASE_VERSION }}" nft/nfctl/main.go
+        run: CGO_ENABLE=0 GOOS=darwin GOARCH=arm64 go build -ldflags='-s -w' -o "dist/ursactl-darwin_arm64-${{ env.RELEASE_VERSION }}" ursatool/ursactl/main.go
 
       - name: show all builds
         run: ls -lash dist
@@ -49,14 +49,14 @@ jobs:
         id: create_releases
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
-          automatic_release_tag: "Release-nfctl-${{ env.RELEASE_VERSION }}"
+          automatic_release_tag: "Release-ursactl-${{ env.RELEASE_VERSION }}"
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           title: "Release_${{ env.RELEASE_VERSION }}"
           prerelease: false
           files: |
-            dist/nfctl-linux_amd64-${{ env.RELEASE_VERSION }}
-            dist/nfctl-linux_arm64-${{ env.RELEASE_VERSION }}
-            dist/nfctl-win_amd64-${{ env.RELEASE_VERSION }}.exe
-            dist/nfctl-win_arm64-${{ env.RELEASE_VERSION }}.exe
-            dist/nfctl-darwin_amd64-${{ env.RELEASE_VERSION }}
-            dist/nfctl-darwin_arm64-${{ env.RELEASE_VERSION }}
+            dist/ursactl-linux_amd64-${{ env.RELEASE_VERSION }}
+            dist/ursactl-linux_arm64-${{ env.RELEASE_VERSION }}
+            dist/ursactl-win_amd64-${{ env.RELEASE_VERSION }}.exe
+            dist/ursactl-win_arm64-${{ env.RELEASE_VERSION }}.exe
+            dist/ursactl-darwin_amd64-${{ env.RELEASE_VERSION }}
+            dist/ursactl-darwin_arm64-${{ env.RELEASE_VERSION }}

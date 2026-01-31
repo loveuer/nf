@@ -1,4 +1,4 @@
-package nf
+package ursa
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/loveuer/nf/nft/log"
+	"github.com/loveuer/ursa/ursatool/log"
 )
 
 func NewRecover(enableStackTrace bool) HandlerFunc {
@@ -40,7 +40,7 @@ func NewLogger() HandlerFunc {
 		err := c.Next()
 		duration := time.Since(now)
 
-		msg := fmt.Sprintf("NF | %v | %15s | %3d | %s | %6s | %s", c.Context().Value(TraceKey), ip, c.StatusCode, HumanDuration(duration.Nanoseconds()), c.Method(), c.Path())
+		msg := fmt.Sprintf("URSA | %v | %15s | %3d | %s | %6s | %s", c.Context().Value(TraceKey), ip, c.StatusCode, HumanDuration(duration.Nanoseconds()), c.Method(), c.Path())
 
 		switch {
 		case c.StatusCode >= 500:

@@ -1,4 +1,4 @@
-package nf
+package ursa
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"regexp"
 	"sync"
 
-	"github.com/loveuer/nf/internal/bytesconv"
+	"github.com/loveuer/ursa/internal/bytesconv"
 )
 
 var (
@@ -102,7 +102,7 @@ func (a *App) run(ln net.Listener) error {
 	a.server = srv
 
 	if !a.config.DisableBanner {
-		fmt.Println(banner + "nf serve at: " + ln.Addr().String() + "\n")
+		fmt.Println(banner + "ursa serve at: " + ln.Addr().String() + "\n")
 	}
 
 	if !a.config.DisableMessagePrint {
@@ -377,6 +377,6 @@ func messagePrint(a *App) {
 	}
 
 	for _, r := range rs {
-		fmt.Printf(" nf | route | %*s - %*s | %s\n", lm, r.Method, lp, r.Path, r.Handler)
+		fmt.Printf(" ursa | route | %*s - %*s | %s\n", lm, r.Method, lp, r.Path, r.Handler)
 	}
 }

@@ -2,7 +2,7 @@ package resp
 
 import (
 	"errors"
-	"github.com/loveuer/nf"
+	"github.com/loveuer/ursa"
 )
 
 type Error struct {
@@ -51,7 +51,7 @@ func NewError(statusCode uint32, msg string, rawErr error, data any) Error {
 	}
 }
 
-func RespError(c *nf.Ctx, err error) error {
+func RespError(c *ursa.Ctx, err error) error {
 	if err == nil {
 		return Resp(c, 500, MSG500, "response with nil error", nil)
 	}

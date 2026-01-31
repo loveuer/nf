@@ -12,24 +12,24 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/loveuer/nf/nft/loading"
-	"github.com/loveuer/nf/nft/log"
-	"github.com/loveuer/nf/nft/nfctl/internal/opt"
-	"github.com/loveuer/nf/nft/tool"
+	"github.com/loveuer/ursa/ursatool/loading"
+	"github.com/loveuer/ursa/ursatool/log"
+	"github.com/loveuer/ursa/ursatool/ursactl/internal/opt"
+	"github.com/loveuer/ursa/ursatool/tool"
 	"github.com/spf13/cobra"
 )
 
 var newCmd = &cobra.Command{
 	Use:           "new",
 	Short:         "new a nf project",
-	Example:       "nfctl new <project> -t ultone [options]",
+	Example:       "ursactl new <project> -t ultone [options]",
 	RunE:          doNew,
 	SilenceErrors: true,
 }
 
 func initNew() *cobra.Command {
 	newCmd.Flags().StringVarP(&opt.Cfg.New.Template, "template", "t", "ultone", "template name/url[example:ultone, https://gitea.loveuer.com/loveuer/ultone.git]")
-	newCmd.Flags().BoolVar(&opt.Cfg.New.DisableInitScript, "disable-init-script", false, "disable init script(.nfctl)")
+	newCmd.Flags().BoolVar(&opt.Cfg.New.DisableInitScript, "disable-init-script", false, "disable init script(.ursactl)")
 	return newCmd
 }
 

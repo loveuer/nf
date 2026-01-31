@@ -1,4 +1,4 @@
-package nf
+package ursa
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/loveuer/nf/internal/bytesconv"
+	"github.com/loveuer/ursa/internal/bytesconv"
 )
 
 var (

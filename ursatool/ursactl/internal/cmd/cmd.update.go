@@ -9,16 +9,16 @@ import (
 	"time"
 
 	resty "github.com/go-resty/resty/v2"
-	"github.com/loveuer/nf/nft/loading"
-	"github.com/loveuer/nf/nft/log"
-	"github.com/loveuer/nf/nft/nfctl/internal/opt"
-	"github.com/loveuer/nf/nft/tool"
+	"github.com/loveuer/ursa/ursatool/loading"
+	"github.com/loveuer/ursa/ursatool/log"
+	"github.com/loveuer/ursa/ursatool/ursactl/internal/opt"
+	"github.com/loveuer/ursa/ursatool/tool"
 	"github.com/spf13/cobra"
 )
 
 var updateCmd = &cobra.Command{
 	Use:   "update",
-	Short: "update nfctl self",
+	Short: "update ursactl self",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return nil
 	},
@@ -33,7 +33,7 @@ func doUpdate(ctx context.Context) (err error) {
 	defer cancel()
 	return loading.Do(ctxWithTimeout, func(ctx context.Context, print func(msg string, types ...loading.Type)) error {
 		print("正在检查更新...")
-		tip := "❗ 请尝试手动更新: go install github.com/loveuer/nf/nft/nfctl@master"
+		tip := "❗ 请尝试手动更新: go install github.com/loveuer/ursa/ursatool/ursactl@master"
 		version := ""
 
 		var rr *resty.Response
@@ -78,7 +78,7 @@ func doUpdate(ctx context.Context) (err error) {
 
 		time.Sleep(2 * time.Second)
 
-		print("暂时无法自动更新, 请尝试手动更新: go install github.com/loveuer/nf/nft/nfctl@master", loading.TypeWarning)
+		print("暂时无法自动更新, 请尝试手动更新: go install github.com/loveuer/ursa/ursatool/ursactl@master", loading.TypeWarning)
 
 		return nil
 	})

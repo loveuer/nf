@@ -1,4 +1,4 @@
-package nf
+package ursa
 
 import (
 	"sync"
@@ -6,12 +6,12 @@ import (
 )
 
 const (
-	banner   = "  _  _     _     ___                 _ \n | \\| |___| |_  | __|__ _  _ _ _  __| |\n | .` / _ \\  _| | _/ _ \\ || | ' \\/ _` |\n |_|\\_\\___/\\__| |_|\\___/\\_,_|_||_\\__,_|\n "
-	_404     = "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1\"><meta http-equiv=\"X-UA-Compatible\" content=\"ie=edge\"><title>Not Found</title><style>body{background:#333;margin:0;color:#ccc;display:flex;align-items:center;max-height:100vh;height:100vh;justify-content:center}textarea{min-height:5rem;min-width:20rem;text-align:center;border:none;background:0 0;color:#ccc;resize:none;user-input:none;user-select:none;cursor:default;-webkit-user-select:none;-webkit-touch-callout:none;-moz-user-select:none;-ms-user-select:none;outline:0}</style></head><body><textarea id=\"banner\" readonly=\"readonly\"></textarea><script type=\"text/javascript\">let htmlCodes = [\n    ' _  _     _     ___                 _ ',\n    '| \\\\| |___| |_  | __|__ _  _ _ _  __| |',\n    '| .` / _ \\\\  _| | _/ _ \\\\ || | \\' \\\\/ _` |',\n    '|_|\\\\_\\\\___/\\\\__| |_|\\\\___/\\\\_,_|_||_\\\\__,_|'\n].join('\\n');\ndocument.querySelector('#banner').value = htmlCodes</script></body></html>"
+	banner   = " _   _                  \n| | | |_ __ ___  __ _  \n| | | | '__/ __|/ _` | \n| |_| | |  \\__ \\ (_| | \n \\___/|_|  |___/\\__,_| \n "
+	_404     = "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,user-scalable=no,initial-scale=1,maximum-scale=1,minimum-scale=1\"><meta http-equiv=\"X-UA-Compatible\" content=\"ie=edge\"><title>Not Found</title><style>body{background:#333;margin:0;color:#ccc;display:flex;align-items:center;max-height:100vh;height:100vh;justify-content:center}textarea{min-height:5rem;min-width:20rem;text-align:center;border:none;background:0 0;color:#ccc;resize:none;user-input:none;user-select:none;cursor:default;-webkit-user-select:none;-webkit-touch-callout:none;-moz-user-select:none;-ms-user-select:none;outline:0}</style></head><body><textarea id=\"banner\" readonly=\"readonly\"></textarea><script type=\"text/javascript\">let htmlCodes = [\n    ' _   _                  ',\n    '| | | |_ __ ___  __ _  ',\n    '| | | | \\'__/ __|/ _\\` | ',\n    '| |_| | |  \\\\__ \\\\ (_| | ',\n    ' \\\\___/|_|  |___/\\\\__,_| '\n].join('\\n');\ndocument.querySelector('#banner').value = htmlCodes</script></body></html>"
 	_405     = `405 Method Not Allowed`
 	_500     = `500 Internal Server Error`
 	TraceKey = "X-Trace-Id"
-	version  = "nf-0.3.4"
+	version  = "ursa-1.0.0"
 )
 
 type Map map[string]interface{}
